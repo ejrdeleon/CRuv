@@ -174,10 +174,6 @@ class AuthController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        if ($user->isStaff()) {
-            return redirect()->route('admin.reports');
-        }
-
         return redirect()->route('resident.home');
     }
 }

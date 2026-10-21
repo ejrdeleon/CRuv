@@ -120,18 +120,15 @@ Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
 
 ## 🔐 Demonstration Accounts & Credentials
 
-The database seeder pre-configures realistic accounts across all three user roles:
+The database seeder pre-configures realistic accounts across both user roles:
 
 | Role | Email | Password | Access Scope |
 |---|---|---|---|
-| **Administrator** | `admin@barangay.gov.ph` | `password123` | Full administrative dashboard, assignments, staff management, analytics |
-| **Staff (Works)** | `staff.works@barangay.gov.ph` | `password123` | Report inspection, internal notes, resolution recording (Public Works) |
-| **Staff (Electric)** | `staff.electric@barangay.gov.ph` | `password123` | Utility liaison desk, hazard cordon notes, status updates |
-| **Staff (Drainage)** | `staff.drainage@barangay.gov.ph` | `password123` | Drainage canal mitigation inspections and updates |
-| **Resident** | `maria.santos@gmail.com` | `password123` | Mobile reporting interface, My Reports, notifications, edit pending report |
-| **Resident** | `juan.delacruz@gmail.com` | `password123` | Mobile reporting interface, tracking, personal alerts |
+| **Administrator** | `admin@barangay.gov.ph` | `password123` | Complete administrative dashboard, department assignments, verification, map monitoring, analytics |
+| **Resident** | `maria.santos@gmail.com` | `password123` | Mobile reporting interface, photo uploads, GPS coordinates, My Reports, personal alerts |
+| **Resident** | `juan.delacruz@gmail.com` | `password123` | Mobile reporting, issue tracking, status notifications |
 
-> **Quick Fill Tip**: The login screen features one-click demo login buttons to switch instantly between Admin, Staff, and Resident profiles during evaluation.
+> **Quick Fill Tip**: The login screen features one-click demo login buttons to switch instantly between **Barangay Admin** and **Resident User** profiles during evaluation.
 
 ---
 

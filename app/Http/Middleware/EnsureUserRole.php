@@ -27,12 +27,7 @@ class EnsureUserRole
             return redirect()->route('login')->withErrors(['email' => 'Your account has been deactivated.']);
         }
 
-        // 'admin' role always satisfies admin or staff or resident
-        if ($user->role === 'admin') {
-            return $next($request);
-        }
-
-        // If staff role required and user is staff
+        // Check if user has one of the allowed roles
         if (in_array($user->role, $roles)) {
             return $next($request);
         }

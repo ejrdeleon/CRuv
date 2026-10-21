@@ -31,9 +31,6 @@ Route::get('/', function () {
     if ($user->isAdmin()) {
         return redirect()->route('admin.dashboard');
     }
-    if ($user->isStaff()) {
-        return redirect()->route('admin.reports');
-    }
 
     return redirect()->route('resident.home');
 });
@@ -61,17 +58,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/notifications', NotificationCenter::class)->name('notifications');
     });
 
-    // Administrator & Staff Routes (Accessible by staff & admin)
-    Route::prefix('admin')->name('admin.')->middleware('role:staff,admin')->group(function () {
+    // Administrator Routes (Strictly role:admin)
+    Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
         Route::get('/dashboard', Dashboard::class)->name('dashboard');
         Route::get('/map', InteractiveMap::class)->name('map');
         Route::get('/reports', ReportManagement::class)->name('reports');
         Route::get('/reports/{report}', AdminReportDetail::class)->name('reports.show');
-
-        // Administrator only routes
-        Route::middleware('role:admin')->group(function () {
-            Route::get('/staff', StaffManagement::class)->name('staff');
-            Route::get('/analytics', Analytics::class)->name('analytics');
-        });
+        Route::get('/departments', StaffManagement::class)->name('staff');
+        Route::get('/analytics', Analytics::class)->name('analytics');
     });
 });

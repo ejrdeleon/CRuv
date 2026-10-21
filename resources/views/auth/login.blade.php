@@ -16,15 +16,14 @@
                 <!-- Quick Demo Logins for Pair Programming / Review -->
                 <div class="mb-6 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                     <p class="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Quick Demo Accounts</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" onclick="fillDemo('admin@barangay.gov.ph', 'password123')" class="px-2 py-1.5 text-xs font-medium rounded-lg bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition text-center">
-                            Admin
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button" onclick="fillDemo('admin@barangay.gov.ph', 'password123')" class="px-3 py-2 text-xs font-bold rounded-lg bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition text-center flex items-center justify-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                            <span>Barangay Admin</span>
                         </button>
-                        <button type="button" onclick="fillDemo('staff.works@barangay.gov.ph', 'password123')" class="px-2 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition text-center">
-                            Staff
-                        </button>
-                        <button type="button" onclick="fillDemo('maria.santos@gmail.com', 'password123')" class="px-2 py-1.5 text-xs font-medium rounded-lg bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 transition text-center">
-                            Resident
+                        <button type="button" onclick="fillDemo('maria.santos@gmail.com', 'password123')" class="px-3 py-2 text-xs font-bold rounded-lg bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 transition text-center flex items-center justify-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+                            <span>Resident User</span>
                         </button>
                     </div>
                 </div>

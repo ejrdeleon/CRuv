@@ -28,7 +28,7 @@ class ReportDetail extends Component
         $user = Auth::user();
 
         // Enforce authorization
-        if (! $user->isAdmin() && ! $user->isStaff() && $report->user_id !== $user->id) {
+        if (! $user->isAdmin() && $report->user_id !== $user->id) {
             abort(403, 'You are not authorized to view this private report.');
         }
 

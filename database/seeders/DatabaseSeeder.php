@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
         SystemSetting::set('utility_hotline', 'Meralco 16211 / Batelec (049) 555-0199', 'Electric Utility Hotline');
         SystemSetting::set('pdrrmc_hotline', 'Laguna PDRRMO 911 / (049) 501-1114', 'Disaster Hotline');
 
-        // 2. Departments
+        // 2. Departments / Responsible Units
         $deptPublicWorks = Department::create([
             'name' => 'Barangay Public Works & Infrastructure',
             'code' => 'BPWE',
@@ -167,7 +167,7 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        // 4. Users
+        // 4. Users (Strictly Admin and Residents)
         $admin = User::create([
             'name' => 'Hon. Admin Captain Santos',
             'email' => 'admin@barangay.gov.ph',
@@ -179,44 +179,8 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $staffWorks = User::create([
-            'name' => 'Officer Marco Reyes (Public Works)',
-            'email' => 'staff.works@barangay.gov.ph',
-            'password' => Hash::make('password123'),
-            'role' => 'staff',
-            'phone' => '0918-200-3000',
-            'barangay' => 'Barangay San Isidro',
-            'address' => 'Sitio Riverside, San Isidro',
-            'department_id' => $deptPublicWorks->id,
-            'is_active' => true,
-        ]);
-
-        $staffElectric = User::create([
-            'name' => 'Officer Jaime Lopez (Electrical Liaison)',
-            'email' => 'staff.electric@barangay.gov.ph',
-            'password' => Hash::make('password123'),
-            'role' => 'staff',
-            'phone' => '0919-300-4000',
-            'barangay' => 'Barangay San Isidro',
-            'address' => 'Purok 3, San Isidro',
-            'department_id' => $deptElectric->id,
-            'is_active' => true,
-        ]);
-
-        $staffDrainage = User::create([
-            'name' => 'Officer Corazon Dizon (Flood & Canal)',
-            'email' => 'staff.drainage@barangay.gov.ph',
-            'password' => Hash::make('password123'),
-            'role' => 'staff',
-            'phone' => '0920-400-5000',
-            'barangay' => 'Barangay San Isidro',
-            'address' => 'Purok 1, San Isidro',
-            'department_id' => $deptDrainage->id,
-            'is_active' => true,
-        ]);
-
         $resident1 = User::create([
-            'name' => 'Maria Clara Dela Santos',
+            'name' => 'Maria Clara Santos',
             'email' => 'maria.santos@gmail.com',
             'password' => Hash::make('password123'),
             'role' => 'resident',
@@ -249,7 +213,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $resident1->id,
             'category_id' => $catRoad->id,
             'department_id' => $deptPublicWorks->id,
-            'assigned_to' => $staffWorks->id,
+            'assigned_to' => $admin->id,
             'title' => 'Deep pothole causing motorcycle accidents near Elementary School',
             'description' => 'A large deep pothole has expanded after the weekend rains directly along the southbound lane in front of San Isidro Elementary School. Several tricycles and motorbikes swerve dangerously into oncoming lanes.',
             'priority' => 'high',
@@ -298,12 +262,12 @@ class DatabaseSeeder extends Seeder
             'user_id' => $admin->id,
             'from_status' => 'verified',
             'to_status' => 'assigned',
-            'comment' => 'Assigned to Officer Marco Reyes (Public Works team).',
+            'comment' => 'Assigned to Public Works & Infrastructure unit.',
             'created_at' => now()->subDays(2),
         ]);
         ReportStatusHistory::create([
             'report_id' => $rep1->id,
-            'user_id' => $staffWorks->id,
+            'user_id' => $admin->id,
             'from_status' => 'assigned',
             'to_status' => 'in_progress',
             'comment' => 'Cold-mix asphalt batch requisitioned; warning cones deployed around hole.',
@@ -319,7 +283,7 @@ class DatabaseSeeder extends Seeder
         ]);
         ReportComment::create([
             'report_id' => $rep1->id,
-            'user_id' => $staffWorks->id,
+            'user_id' => $admin->id,
             'comment' => 'Internal Note: 4 bags of asphalt patching compound dispatched with vehicle crew B.',
             'is_internal' => true,
             'created_at' => now()->subDay(),
@@ -341,7 +305,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $resident2->id,
             'category_id' => $catElectrical->id,
             'department_id' => $deptElectric->id,
-            'assigned_to' => $staffElectric->id,
+            'assigned_to' => $admin->id,
             'title' => 'Low hanging sparking electrical line dangling over pedestrian walkway',
             'description' => 'A primary secondary wire snapped off insulator during strong wind and is now dangling about 5 feet from the ground near a wooden fence. Sparks noticed when brushed by tree branches. Hazard tape required immediately.',
             'priority' => 'urgent',
@@ -387,7 +351,7 @@ class DatabaseSeeder extends Seeder
 
         ReportComment::create([
             'report_id' => $rep2->id,
-            'user_id' => $staffElectric->id,
+            'user_id' => $admin->id,
             'comment' => 'Barangay tanods have cordoned off the 10-meter perimeter with caution tape. Incident ticket #MER-2026-9921 lodged with Meralco emergency dispatch.',
             'is_internal' => false,
             'created_at' => now()->subHours(3),
@@ -409,7 +373,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $resident1->id,
             'category_id' => $catDrainage->id,
             'department_id' => $deptDrainage->id,
-            'assigned_to' => $staffDrainage->id,
+            'assigned_to' => $admin->id,
             'title' => 'Severe canal overflow submerging pedestrian walkway and driveway',
             'description' => 'The open canal along Purok 1 was choked with accumulated plastic and tree debris, causing muddy floodwater to spill into adjacent residential driveways even with moderate rain.',
             'priority' => 'high',
@@ -459,7 +423,7 @@ class DatabaseSeeder extends Seeder
         ]);
         ReportStatusHistory::create([
             'report_id' => $rep3->id,
-            'user_id' => $staffDrainage->id,
+            'user_id' => $admin->id,
             'from_status' => 'in_progress',
             'to_status' => 'resolved',
             'comment' => 'Canal desilted and debris collected by cleanup crew.',
@@ -467,7 +431,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Report 4: Broken Streetlight (Submitted / Under Review)
-        $rep4 = Report::create([
+        Report::create([
             'reference_number' => 'BRGY-20261021-0004',
             'user_id' => $resident2->id,
             'category_id' => $catStreetlight->id,
@@ -489,12 +453,12 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Report 5: Fallen Tree (Assigned to BDRRMC)
-        $rep5 = Report::create([
+        Report::create([
             'reference_number' => 'BRGY-20261021-0005',
             'user_id' => $resident1->id,
             'category_id' => $catTrees->id,
             'department_id' => $deptBdrrmc->id,
-            'assigned_to' => null,
+            'assigned_to' => $admin->id,
             'title' => 'Large acacia branch fractured and resting on perimeter wall',
             'description' => 'A heavy acacia branch broke partially during heavy thunderstorm winds and is precariously leaning on the chapel concrete perimeter wall right above the pedestrian sidewalk.',
             'priority' => 'high',
@@ -539,6 +503,6 @@ class DatabaseSeeder extends Seeder
         ActivityLog::log('system_seed', 'Initial system seeding completed with realistic community data', null, ['seed_version' => '1.0'], $admin);
         ActivityLog::log('report_verified', "Report {$rep1->reference_number} verified and prioritized as High", $rep1, null, $admin);
         ActivityLog::log('report_assigned', "Report {$rep1->reference_number} assigned to Public Works", $rep1, null, $admin);
-        ActivityLog::log('status_updated', "Report {$rep3->reference_number} marked as Resolved", $rep3, null, $staffDrainage);
+        ActivityLog::log('status_updated', "Report {$rep3->reference_number} marked as Resolved", $rep3, null, $admin);
     }
 }

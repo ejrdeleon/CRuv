@@ -17,7 +17,7 @@ class ReportPolicy
 
     /**
      * Determine whether the user can view the model.
-     * Residents cannot view other residents' private reports or internal staff notes.
+     * Administrators can view all reports. Residents can only view their own reports.
      */
     public function view(User $user, Report $report): bool
     {
@@ -25,12 +25,6 @@ class ReportPolicy
             return true;
         }
 
-        if ($user->isStaff()) {
-            // Staff can view reports
-            return true;
-        }
-
-        // Resident can only view their own report
         return $report->user_id === $user->id;
     }
 
@@ -51,10 +45,6 @@ class ReportPolicy
             return true;
         }
 
-        if ($user->isStaff()) {
-            return true;
-        }
-
         // Resident can edit only while still in submitted state
         return $report->canBeEditedBy($user);
     }
@@ -64,7 +54,7 @@ class ReportPolicy
      */
     public function changeStatus(User $user, Report $report): bool
     {
-        return $user->isAdmin() || $user->isStaff();
+        return $user->isAdmin();
     }
 
     /**
@@ -76,11 +66,11 @@ class ReportPolicy
     }
 
     /**
-     * Determine whether the user can add internal staff comments.
+     * Determine whether the user can add internal admin comments.
      */
     public function addInternalNote(User $user, Report $report): bool
     {
-        return $user->isAdmin() || $user->isStaff();
+        return $user->isAdmin();
     }
 
     /**

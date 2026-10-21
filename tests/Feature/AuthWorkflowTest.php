@@ -53,29 +53,25 @@ class AuthWorkflowTest extends TestCase
         $response->assertRedirect(route('admin.dashboard'));
     }
 
-    public function test_resident_cannot_access_admin_dashboard(): void
+    public function test_resident_cannot_access_admin_dashboard_or_reports(): void
     {
         $resident = User::factory()->create([
             'role' => 'resident',
         ]);
 
-        $response = $this->actingAs($resident)->get(route('admin.dashboard'));
-
-        $response->assertStatus(403);
+        $this->actingAs($resident)->get(route('admin.dashboard'))->assertStatus(403);
+        $this->actingAs($resident)->get(route('admin.reports'))->assertStatus(403);
+        $this->actingAs($resident)->get(route('admin.map'))->assertStatus(403);
     }
 
-    public function test_staff_can_access_admin_reports_but_not_admin_staff_management(): void
+    public function test_admin_can_access_admin_portal_sections(): void
     {
-        $staff = User::factory()->create([
-            'role' => 'staff',
+        $admin = User::factory()->create([
+            'role' => 'admin',
         ]);
 
-        // Staff CAN access reports management
-        $responseReports = $this->actingAs($staff)->get(route('admin.reports'));
-        $responseReports->assertStatus(200);
-
-        // Staff CANNOT access admin staff management
-        $responseStaff = $this->actingAs($staff)->get(route('admin.staff'));
-        $responseStaff->assertStatus(403);
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertStatus(200);
+        $this->actingAs($admin)->get(route('admin.reports'))->assertStatus(200);
+        $this->actingAs($admin)->get(route('admin.map'))->assertStatus(200);
     }
 }

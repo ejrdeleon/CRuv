@@ -209,8 +209,8 @@ class SubmitReport extends Component
             'is_read' => false,
         ]);
 
-        // Notify admins / staff
-        $admins = User::whereIn('role', ['admin', 'staff'])->get();
+        // Notify barangay admin
+        $admins = User::where('role', 'admin')->get();
         foreach ($admins as $adminUser) {
             Notification::create([
                 'user_id' => $adminUser->id,

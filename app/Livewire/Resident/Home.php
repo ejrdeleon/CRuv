@@ -33,7 +33,7 @@ class Home extends Component
         }
 
         // Check if user is authorized to view
-        if (! Auth::user()->isAdmin() && ! Auth::user()->isStaff() && $report->user_id !== Auth::id()) {
+        if (! Auth::user()->isAdmin() && $report->user_id !== Auth::id()) {
             $this->trackError = 'You do not have permission to view this private report.';
 
             return;

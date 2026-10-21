@@ -23,7 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        'role', // 'admin', 'resident'
         'phone',
         'barangay',
         'address',
@@ -60,11 +60,6 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
-    public function isStaff(): bool
-    {
-        return $this->role === 'staff' || $this->role === 'admin';
-    }
-
     public function isResident(): bool
     {
         return $this->role === 'resident';
@@ -78,11 +73,6 @@ class User extends Authenticatable
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class, 'user_id');
-    }
-
-    public function assignedReports(): HasMany
-    {
-        return $this->hasMany(Report::class, 'assigned_to');
     }
 
     public function notifications(): HasMany

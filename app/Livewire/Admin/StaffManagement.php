@@ -13,8 +13,8 @@ use Livewire\Component;
 #[Layout('layouts.admin')]
 class StaffManagement extends Component
 {
-    // New staff modal state
-    public bool $showNewStaffModal = false;
+    // New administrator modal state
+    public bool $showNewAdminModal = false;
 
     public string $name = '';
 
@@ -23,10 +23,6 @@ class StaffManagement extends Component
     public string $phone = '';
 
     public string $password = '';
-
-    public ?int $department_id = null;
-
-    public string $role = 'staff';
 
     // Department modal state
     public bool $showNewDeptModal = false;
@@ -43,22 +39,19 @@ class StaffManagement extends Component
 
     public string $deptContactEmail = '';
 
-    public function openNewStaffModal()
+    public function openNewAdminModal()
     {
-        $this->reset(['name', 'email', 'phone', 'password', 'department_id', 'role']);
-        $this->role = 'staff';
-        $this->showNewStaffModal = true;
+        $this->reset(['name', 'email', 'phone', 'password']);
+        $this->showNewAdminModal = true;
     }
 
-    public function createStaff()
+    public function createAdmin()
     {
         $this->validate([
             'name' => 'required|string|max:150',
             'email' => 'required|email|max:150|unique:users,email',
             'phone' => 'required|string|max:30',
             'password' => 'required|string|min:8',
-            'department_id' => 'nullable|exists:departments,id',
-            'role' => 'required|in:staff,admin',
         ]);
 
         $user = User::create([
@@ -66,16 +59,15 @@ class StaffManagement extends Component
             'email' => $this->email,
             'phone' => $this->phone,
             'password' => Hash::make($this->password),
-            'department_id' => $this->department_id,
-            'role' => $this->role,
+            'role' => 'admin',
             'barangay' => 'Barangay San Isidro',
             'is_active' => true,
         ]);
 
-        ActivityLog::log('staff_created', "Admin created {$this->role} user: {$user->name} ({$user->email})", $user);
+        ActivityLog::log('admin_created', "Admin account created: {$user->name} ({$user->email})", $user);
 
-        $this->showNewStaffModal = false;
-        session()->flash('success', "Account for {$user->name} created successfully.");
+        $this->showNewAdminModal = false;
+        session()->flash('success', "Administrator account for {$user->name} created successfully.");
     }
 
     public function toggleUserStatus(int $userId)
@@ -129,24 +121,15 @@ class StaffManagement extends Component
 
     public function render()
     {
-        $staffMembers = User::with('department')
-            ->withCount(['assignedReports as active_cases_count' => function ($q) {
-                $q->whereNotIn('status', ['resolved', 'rejected', 'duplicate']);
-            }])
-            ->withCount(['assignedReports as completed_cases_count' => function ($q) {
-                $q->where('status', 'resolved');
-            }])
-            ->whereIn('role', ['staff', 'admin'])
-            ->orderBy('role')
+        $adminUsers = User::where('role', 'admin')
             ->orderBy('name')
             ->get();
 
         $departments = Department::withCount('reports')
-            ->withCount('staff')
             ->get();
 
         return view('livewire.admin.staff-management', [
-            'staffMembers' => $staffMembers,
+            'adminUsers' => $adminUsers,
             'departments' => $departments,
         ]);
     }

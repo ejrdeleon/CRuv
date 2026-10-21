@@ -101,10 +101,9 @@ class ReportWorkflowTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_admin_can_update_status_and_assign_staff(): void
+    public function test_admin_can_update_status_and_assign_department(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $staff = User::factory()->create(['role' => 'staff']);
         $resident = User::factory()->create(['role' => 'resident']);
         $category = ReportCategory::first();
         $dept = Department::first();
@@ -125,17 +124,15 @@ class ReportWorkflowTest extends TestCase
             'province' => 'Laguna',
         ]);
 
-        // Admin assigns report to staff
+        // Admin assigns report to department
         Livewire::actingAs($admin)
             ->test(AdminReportDetail::class, ['report' => $report])
             ->set('assignedDepartmentId', $dept->id)
-            ->set('assignedStaffId', $staff->id)
             ->set('assignmentNotes', 'Deploy crew with concrete patching batch.')
             ->call('assignReport')
             ->assertHasNoErrors();
 
         $report->refresh();
-        $this->assertEquals($staff->id, $report->assigned_to);
         $this->assertEquals($dept->id, $report->department_id);
 
         // Admin moves status to in_progress
