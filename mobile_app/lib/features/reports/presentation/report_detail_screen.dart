@@ -176,10 +176,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                       ),
                                       Row(
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.badge_outlined,
                                             size: 18,
-                                            color: AppTheme.primaryColor,
+                                            color: Theme.of(context).colorScheme.primary,
                                           ),
                                           const SizedBox(width: 6),
                                           Expanded(
@@ -201,41 +201,54 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                       const SizedBox(
                                         height: AppTheme.spacingMd,
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.all(
-                                          AppTheme.spacingSm,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFECFDF5),
-                                          borderRadius: BorderRadius.circular(
-                                            AppTheme.radiusSm,
-                                          ),
-                                          border: Border.all(
-                                            color: const Color(0xFFA7F3D0),
-                                          ),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Official Resolution Summary',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                color: AppTheme.successColor,
-                                                fontSize: 13,
+                                      Builder(
+                                        builder: (ctx) {
+                                          final isDark = Theme.of(ctx).brightness == Brightness.dark;
+                                          return Container(
+                                            padding: const EdgeInsets.all(
+                                              AppTheme.spacingSm,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? AppTheme.statusResolvedBgDark
+                                                  : AppTheme.statusResolvedBgLight,
+                                              borderRadius: BorderRadius.circular(
+                                                AppTheme.radiusSm,
+                                              ),
+                                              border: Border.all(
+                                                color: isDark
+                                                    ? AppTheme.statusResolvedTextDark.withValues(alpha: 0.3)
+                                                    : const Color(0xFFA7F3D0),
                                               ),
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              report.resolutionNotes!,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: Color(0xFF065F46),
-                                              ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Official Resolution Summary',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: isDark
+                                                        ? AppTheme.statusResolvedTextDark
+                                                        : AppTheme.statusResolvedTextLight,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  report.resolutionNotes!,
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    color: isDark
+                                                        ? AppTheme.slate200
+                                                        : const Color(0xFF065F46),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
+                                          );
+                                        },
                                       ),
                                     ],
                                   ],
@@ -393,26 +406,26 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                               fit: BoxFit.cover,
                                               errorBuilder:
                                                   (context, error, stackTrace) {
+                                                final isDark = Theme.of(context).brightness == Brightness.dark;
                                                 return Container(
                                                   height: 140,
-                                                  color:
-                                                      AppTheme.backgroundLight,
+                                                  color: isDark ? AppTheme.slate800 : AppTheme.backgroundLight,
                                                   alignment: Alignment.center,
-                                                  child: const Column(
+                                                  child: Column(
                                                     mainAxisSize:
                                                         MainAxisSize.min,
                                                     children: [
                                                       Icon(
                                                         Icons
                                                             .broken_image_outlined,
-                                                        color: AppTheme
-                                                            .textSecondary,
+                                                        color: isDark ? AppTheme.slate400 : AppTheme.textSecondary,
                                                       ),
-                                                      SizedBox(height: 4),
+                                                      const SizedBox(height: 4),
                                                       Text(
                                                         'Image preview unavailable',
                                                         style: TextStyle(
                                                           fontSize: 12,
+                                                          color: isDark ? AppTheme.slate300 : AppTheme.slate700,
                                                         ),
                                                       ),
                                                     ],
@@ -534,15 +547,19 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                         height: AppTheme.spacingSm,
                                       ),
                                       ...report.publicComments.map((comment) {
+                                        final isDark = Theme.of(context).brightness == Brightness.dark;
                                         return Container(
                                           margin: const EdgeInsets.only(
                                             bottom: 8,
                                           ),
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
-                                            color: AppTheme.backgroundLight,
+                                            color: isDark ? AppTheme.slate800 : AppTheme.slate100,
                                             borderRadius: BorderRadius.circular(
                                               AppTheme.radiusSm,
+                                            ),
+                                            border: Border.all(
+                                              color: isDark ? AppTheme.slate700 : AppTheme.slate200,
                                             ),
                                           ),
                                           child: Column(
@@ -551,13 +568,20 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                             children: [
                                               Text(
                                                 comment.authorName,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontWeight: FontWeight.w600,
                                                   fontSize: 12.5,
+                                                  color: isDark ? AppTheme.slate100 : AppTheme.slate900,
                                                 ),
                                               ),
                                               const SizedBox(height: 4),
-                                              Text(comment.body),
+                                              Text(
+                                                comment.body,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: isDark ? AppTheme.slate200 : AppTheme.slate800,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         );
@@ -606,17 +630,22 @@ class _LifecycleProgressStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (currentStatus == 'rejected' || currentStatus == 'duplicate') {
       return Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFFEF2F2),
+          color: isDark ? AppTheme.statusHazardBgDark : const Color(0xFFFEF2F2),
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isDark ? AppTheme.statusHazardTextDark.withValues(alpha: 0.3) : const Color(0xFFFECACA),
+          ),
         ),
         child: Text(
           'This report was marked as ${currentStatus.toUpperCase()}.',
-          style: const TextStyle(
-            color: AppTheme.dangerColor,
+          style: TextStyle(
+            color: isDark ? AppTheme.statusHazardTextDark : AppTheme.dangerColor,
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),
@@ -639,8 +668,8 @@ class _LifecycleProgressStrip extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 decoration: BoxDecoration(
                   color: isCompleted
-                      ? AppTheme.primaryColor
-                      : AppTheme.borderColor,
+                      ? (isDark ? const Color(0xFF14B8A6) : AppTheme.primaryColor)
+                      : (isDark ? AppTheme.slate800 : AppTheme.borderColor),
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -653,8 +682,8 @@ class _LifecycleProgressStrip extends StatelessWidget {
                   fontWeight:
                       isCompleted ? FontWeight.w700 : FontWeight.w500,
                   color: isCompleted
-                      ? AppTheme.textPrimary
-                      : AppTheme.textSecondary,
+                      ? (isDark ? AppTheme.slate50 : AppTheme.textPrimary)
+                      : (isDark ? AppTheme.slate400 : AppTheme.textSecondary),
                 ),
               ),
             ],

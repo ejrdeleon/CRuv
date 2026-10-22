@@ -273,6 +273,35 @@ class AppTheme {
         thickness: 1,
         space: 1,
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        modalBackgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: slate100,
+        disabledColor: slate100,
+        selectedColor: primaryTealLight,
+        secondarySelectedColor: primaryTealLight,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(r6),
+          side: const BorderSide(color: slate300),
+        ),
+        labelStyle: const TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: slate800,
+        ),
+      ),
     );
   }
 
@@ -282,9 +311,13 @@ class AppTheme {
       brightness: Brightness.dark,
       primary: const Color(0xFF14B8A6),
       onPrimary: slate950,
+      secondary: slate300,
+      onSecondary: slate950,
       surface: slate900,
       onSurface: slate50,
       error: statusHazardDot,
+      onError: slate950,
+      outline: slate700,
     );
 
     return ThemeData(
@@ -316,6 +349,125 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusBento),
           side: const BorderSide(color: slate800, width: 1),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: slate900,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: s12,
+          vertical: 14,
+        ),
+        constraints: const BoxConstraints(minHeight: minTouchTarget),
+        labelStyle: const TextStyle(
+          fontFamily: fontFamily,
+          color: slate300,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        hintStyle: const TextStyle(
+          fontFamily: fontFamily,
+          color: slate500,
+          fontSize: 13,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(r8),
+          borderSide: const BorderSide(color: slate700),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(r8),
+          borderSide: const BorderSide(color: slate700),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(r8),
+          borderSide: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(r8),
+          borderSide: const BorderSide(color: statusHazardDot),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF14B8A6),
+          foregroundColor: slate950,
+          elevation: 0,
+          minimumSize: const Size.fromHeight(minTouchTarget),
+          padding: const EdgeInsets.symmetric(horizontal: s16, vertical: s12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(r8),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.1,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: slate50,
+          minimumSize: const Size(64, minTouchTarget),
+          padding: const EdgeInsets.symmetric(horizontal: s16, vertical: s12),
+          side: const BorderSide(color: slate700),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(r8),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: slate900,
+        indicatorColor: primaryTealDark,
+        surfaceTintColor: Colors.transparent,
+        height: 64,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? const Color(0xFF14B8A6) : slate400,
+          );
+        }),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: slate800,
+        thickness: 1,
+        space: 1,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: slate900,
+        modalBackgroundColor: slate900,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: slate900,
+        surfaceTintColor: Colors.transparent,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: slate800,
+        disabledColor: slate800,
+        selectedColor: primaryTealDark,
+        secondarySelectedColor: primaryTealDark,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(r6),
+          side: const BorderSide(color: slate700),
+        ),
+        labelStyle: const TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: slate200,
         ),
       ),
     );

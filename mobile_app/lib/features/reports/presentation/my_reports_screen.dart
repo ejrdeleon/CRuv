@@ -263,13 +263,19 @@ class _FilterChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return ChoiceChip(
       label: Text(label),
       selected: selected,
       onSelected: (_) => onTap(),
-      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.14),
+      selectedColor: theme.colorScheme.primary.withValues(alpha: isDark ? 0.25 : 0.14),
       labelStyle: TextStyle(
-        color: selected ? AppTheme.primaryColor : AppTheme.textSecondary,
+        fontFamily: AppTheme.fontFamily,
+        color: selected
+            ? theme.colorScheme.primary
+            : (isDark ? AppTheme.slate300 : AppTheme.slate700),
         fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
       ),
     );
@@ -283,6 +289,7 @@ class ReportCardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final dateStr = report.createdAt != null
         ? DateFormat('MMM d, yyyy').format(report.createdAt!.toLocal())
         : '';
@@ -311,10 +318,11 @@ class ReportCardItem extends StatelessWidget {
                     children: [
                       Text(
                         report.referenceNumber,
-                        style: const TextStyle(
+                        style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
                           fontWeight: FontWeight.w700,
                           fontSize: 12.5,
-                          color: AppTheme.primaryColor,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                       StatusPill(
@@ -329,14 +337,14 @@ class ReportCardItem extends StatelessWidget {
                     report.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     report.addressText,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),
@@ -349,16 +357,14 @@ class ReportCardItem extends StatelessWidget {
                       report.category?.name ?? 'Community Issue',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary,
                       ),
                     ),
                   ),
                   Text(
                     dateStr,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),

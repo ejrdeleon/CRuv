@@ -164,14 +164,14 @@ class CivicSpatialMapController {
             });
 
             const popupHtml = `
-                <div style="font-family:Inter,sans-serif; min-width:190px; color:#0f172a; line-height:1.35;">
-                    <div style="font-family:monospace; font-size:10px; font-weight:700; color:#64748b;">${this.escapeHtml(r.ref)}</div>
-                    <div style="font-size:12px; font-weight:700; color:#0f172a; margin-top:2px;">${this.escapeHtml(r.title)}</div>
-                    <div style="font-size:11px; color:#475569; margin:4px 0;">
+                <div class="civic-map-popup">
+                    <div class="civic-map-popup-ref">${this.escapeHtml(r.ref)}</div>
+                    <div class="civic-map-popup-title">${this.escapeHtml(r.title)}</div>
+                    <div class="civic-map-popup-meta">
                         ${this.escapeHtml(r.category)} &bull; <strong style="color:${color};">${this.escapeHtml(r.status_label)}</strong>
                     </div>
-                    ${r.address ? `<div style="font-size:10.5px; color:#64748b; margin-bottom:6px;">${this.escapeHtml(r.address)}</div>` : ''}
-                    ${r.url ? `<a href="${this.escapeHtml(r.url)}" style="display:inline-block; padding:4px 8px; background:#0f766e; color:#ffffff; font-size:11px; font-weight:600; border-radius:4px; text-decoration:none;">Inspect Case Dossier &rarr;</a>` : ''}
+                    ${r.address ? `<div class="civic-map-popup-address">${this.escapeHtml(r.address)}</div>` : ''}
+                    ${r.url ? `<a href="${this.escapeHtml(r.url)}" class="civic-map-popup-link">Inspect Case Dossier &rarr;</a>` : ''}
                 </div>
             `;
 

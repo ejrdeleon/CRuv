@@ -261,4 +261,51 @@ class ReportWorkflowTest extends TestCase
             ->assertSet('drawerOpen', true)
             ->assertSet('mapCoordWarning', 'Report #BRGY-MAP-0002 has no valid GPS coordinates to pin on the map.');
     }
+
+    public function test_reports_management_and_detail_support_dark_mode_tokens_and_modals(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $resident = User::factory()->create(['role' => 'resident']);
+        $category = ReportCategory::first();
+
+        $report = Report::create([
+            'reference_number' => 'BRGY-DARK-0001',
+            'user_id' => $resident->id,
+            'category_id' => $category->id,
+            'title' => 'Dark mode test incident',
+            'description' => 'Verifying theme tokens across view states.',
+            'priority' => 'high',
+            'status' => 'submitted',
+            'latitude' => 14.2816,
+            'longitude' => 121.4146,
+            'address_text' => 'Rizal Street',
+            'barangay' => 'Poblacion I',
+            'city' => 'Santa Cruz',
+            'province' => 'Laguna',
+        ]);
+
+        // 1. Report Detail page renders with dark mode tokens
+        $detailComponent = Livewire::actingAs($admin)
+            ->test(AdminReportDetail::class, ['report' => $report])
+            ->assertSee('dark:bg-slate-900')
+            ->assertSee('dark:border-slate-800')
+            ->assertSee('dark:text-white');
+
+        // Modals render with dark mode classes
+        $detailComponent->call('openStatusModal')
+            ->assertSee('dark:bg-slate-900')
+            ->assertSee('dark:border-slate-800')
+            ->assertSee('dark:bg-slate-950');
+
+        $detailComponent->call('openAssignModal')
+            ->assertSee('dark:bg-slate-900')
+            ->assertSee('dark:border-slate-800');
+
+        // 2. Issue Queue renders empty state with dark classes when query yields no results
+        Livewire::actingAs($admin)
+            ->test(AdminReportManagement::class)
+            ->set('search', 'NONEXISTENT_QUERY_TERM_12345')
+            ->assertSee('dark:text-slate-200')
+            ->assertSee('dark:text-slate-400');
+    }
 }
