@@ -36,6 +36,7 @@
         alt="{{ $alt }}"
         class="w-full h-full object-contain transition-transform duration-150 group-hover:scale-[1.02]"
         loading="lazy"
+        decoding="async"
     >
 
     @if($lightbox && $size !== 'thumb' && $size !== 'table')
