@@ -16,9 +16,14 @@ class ReportImageResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $dimensions = $this->dimensions;
+
         return [
             'id' => $this->id,
             'url' => $this->url,
+            'thumbnail_url' => $this->thumbnail_url,
+            'width' => $dimensions['width'] ?? null,
+            'height' => $dimensions['height'] ?? null,
             'original_name' => $this->original_name,
             'mime_type' => $this->mime_type,
             'file_size' => $this->file_size,

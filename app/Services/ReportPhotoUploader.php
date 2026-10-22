@@ -7,15 +7,27 @@ use App\Models\ReportImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class ReportPhotoUploader
 {
     private const MAX_DIMENSION = 1600;
 
-    private const JPEG_QUALITY = 85;
+    private const THUMB_MAX_DIMENSION = 400;
+
+    private const JPEG_QUALITY = 82;
+
+    private ImageManager $imageManager;
+
+    public function __construct(?ImageManager $imageManager = null)
+    {
+        $this->imageManager = $imageManager ?? new ImageManager(new Driver);
+    }
 
     /**
-     * Resize and store an uploaded report image on the public disk.
+     * Auto-orient, proportionally resize by longest side, generate thumbnail,
+     * and persist image record linked to report.
      */
     public function storeAndAttach(
         Report $report,
@@ -37,86 +49,60 @@ class ReportPhotoUploader
     }
 
     /**
-     * Resize image if larger than MAX_DIMENSION and persist via Laravel Storage.
+     * Auto-orient, scale down by longest side preserving aspect ratio (no crop),
+     * generate proportional thumbnail, and store on public disk.
      *
      * @return array{file_path: string, original_name: string, mime_type: string, file_size: int}
      */
     public function resizeAndStore(UploadedFile $file): array
     {
         $originalName = $file->getClientOriginalName();
-        $mimeType = $file->getMimeType() ?? 'image/jpeg';
-        $rawContents = @file_get_contents($file->getRealPath());
+        $realPath = $file->getRealPath();
 
-        if ($rawContents !== false && function_exists('imagecreatefromstring')) {
-            $sourceImage = @imagecreatefromstring($rawContents);
+        try {
+            // 1. Decode uploaded image using Intervention Image v4
+            $image = $this->imageManager->decode($file->getContent());
 
-            if ($sourceImage !== false) {
-                $width = imagesx($sourceImage);
-                $height = imagesy($sourceImage);
+            // 2. Auto-orient: physically transforms pixel buffer according to EXIF rotation/mirror tags
+            // and strips orientation tag to prevent double rotation in modern browsers.
+            $image = $image->orient();
 
-                if ($width > self::MAX_DIMENSION || $height > self::MAX_DIMENSION) {
-                    $ratio = min(self::MAX_DIMENSION / $width, self::MAX_DIMENSION / $height);
-                    $targetWidth = max(1, (int) round($width * $ratio));
-                    $targetHeight = max(1, (int) round($height * $ratio));
+            // 3. Proportionally resize by longest side (max 1600px), strictly preserving aspect ratio (no crop)
+            $image = $image->scaleDown(width: self::MAX_DIMENSION, height: self::MAX_DIMENSION);
 
-                    $resizedImage = imagecreatetruecolor($targetWidth, $targetHeight);
+            // 4. Generate proportional thumbnail (max 400px), strictly preserving aspect ratio
+            $thumb = clone $image;
+            $thumb = $thumb->scaleDown(width: self::THUMB_MAX_DIMENSION, height: self::THUMB_MAX_DIMENSION);
 
-                    if ($resizedImage !== false) {
-                        imagealphablending($resizedImage, false);
-                        imagesavealpha($resizedImage, true);
-                        imagecopyresampled(
-                            $resizedImage,
-                            $sourceImage,
-                            0,
-                            0,
-                            0,
-                            0,
-                            $targetWidth,
-                            $targetHeight,
-                            $width,
-                            $height
-                        );
-                        imagedestroy($sourceImage);
-                        $sourceImage = $resizedImage;
-                    }
-                }
+            $uuid = Str::uuid()->toString();
+            $extension = 'jpg';
+            $mimeType = 'image/jpeg';
 
-                ob_start();
-                if ($mimeType === 'image/png') {
-                    imagepng($sourceImage, null, 7);
-                    $extension = 'png';
-                } elseif ($mimeType === 'image/webp' && function_exists('imagewebp')) {
-                    imagewebp($sourceImage, null, self::JPEG_QUALITY);
-                    $extension = 'webp';
-                } else {
-                    imagejpeg($sourceImage, null, self::JPEG_QUALITY);
-                    $mimeType = 'image/jpeg';
-                    $extension = 'jpg';
-                }
-                $encodedBytes = (string) ob_get_clean();
-                imagedestroy($sourceImage);
+            $mainEncoded = (string) $image->encodeUsingFileExtension('jpg', quality: self::JPEG_QUALITY);
+            $thumbEncoded = (string) $thumb->encodeUsingFileExtension('jpg', quality: self::JPEG_QUALITY);
 
-                if ($encodedBytes !== '') {
-                    $filePath = 'reports/'.Str::uuid()->toString().'.'.$extension;
-                    Storage::disk('public')->put($filePath, $encodedBytes);
+            $filePath = 'reports/'.$uuid.'.'.$extension;
+            $thumbPath = 'reports/thumbnails/'.$uuid.'.'.$extension;
 
-                    return [
-                        'file_path' => $filePath,
-                        'original_name' => $originalName,
-                        'mime_type' => $mimeType,
-                        'file_size' => strlen($encodedBytes),
-                    ];
-                }
-            }
+            Storage::disk('public')->put($filePath, $mainEncoded);
+            Storage::disk('public')->put($thumbPath, $thumbEncoded);
+
+            return [
+                'file_path' => $filePath,
+                'original_name' => $originalName,
+                'mime_type' => $mimeType,
+                'file_size' => strlen($mainEncoded),
+            ];
+        } catch (\Throwable) {
+            // Fallback for non-image or corrupt payloads
+            $fallbackPath = $file->store('reports', 'public');
+
+            return [
+                'file_path' => (string) $fallbackPath,
+                'original_name' => $originalName,
+                'mime_type' => $file->getMimeType() ?? 'image/jpeg',
+                'file_size' => (int) $file->getSize(),
+            ];
         }
-
-        $fallbackPath = $file->store('reports', 'public');
-
-        return [
-            'file_path' => (string) $fallbackPath,
-            'original_name' => $originalName,
-            'mime_type' => $mimeType,
-            'file_size' => (int) $file->getSize(),
-        ];
     }
 }

@@ -139,20 +139,112 @@ class ApiV1WorkflowTest extends TestCase
             ->assertJsonPath('data.title', 'Deep pothole near elementary school')
             ->assertJsonPath('data.status', 'submitted')
             ->assertJsonPath('data.latitude', 14.1819)
-            ->assertJsonCount(1, 'data.images');
+            ->assertJsonCount(1, 'data.images')
+            ->assertJsonStructure([
+                'data' => [
+                    'images' => [
+                        '*' => ['id', 'url', 'thumbnail_url', 'width', 'height'],
+                    ],
+                ],
+            ]);
 
         $report = Report::with('images')->firstOrFail();
         $storedFilePath = $report->images->first()->file_path;
+        $thumbPath = str_replace('reports/', 'reports/thumbnails/', $storedFilePath);
 
         Storage::disk('public')->assertExists($storedFilePath);
+        Storage::disk('public')->assertExists($thumbPath);
 
         $rawBytes = Storage::disk('public')->get($storedFilePath);
         $img = @imagecreatefromstring((string) $rawBytes);
         if ($img !== false) {
-            $this->assertLessThanOrEqual(1600, imagesx($img));
-            $this->assertLessThanOrEqual(1600, imagesy($img));
+            // Original 2000x1500 scaled down preserving 4:3 aspect ratio -> 1600x1200
+            $this->assertEquals(1600, imagesx($img));
+            $this->assertEquals(1200, imagesy($img));
             imagedestroy($img);
         }
+
+        $rawThumbBytes = Storage::disk('public')->get($thumbPath);
+        $thumbImg = @imagecreatefromstring((string) $rawThumbBytes);
+        if ($thumbImg !== false) {
+            // Proportional thumbnail preserving 4:3 aspect ratio -> 400x300
+            $this->assertEquals(400, imagesx($thumbImg));
+            $this->assertEquals(300, imagesy($thumbImg));
+            imagedestroy($thumbImg);
+        }
+    }
+
+    public function test_resident_can_upload_portrait_photo_preserving_aspect_ratio(): void
+    {
+        Storage::fake('public');
+
+        $resident = User::factory()->create([
+            'role' => 'resident',
+            'barangay' => 'Barangay San Isidro',
+        ]);
+
+        Sanctum::actingAs($resident);
+
+        // Portrait 1500x2000 (3:4 ratio)
+        $portraitPhoto = UploadedFile::fake()->image('tall_streetlight.jpg', 1500, 2000);
+
+        $response = $this->postJson('/api/v1/reports', [
+            'category_id' => $this->roadCategory->id,
+            'title' => 'Broken street lamp pole',
+            'description' => 'Light fixture fell off and hanging from wire along sidewalk.',
+            'latitude' => 14.1820,
+            'longitude' => 121.2850,
+            'address_text' => 'Purok 1, Rizal Avenue',
+            'photo' => $portraitPhoto,
+        ]);
+
+        $response->assertCreated();
+
+        $report = Report::with('images')->latest('id')->firstOrFail();
+        $storedFilePath = $report->images->first()->file_path;
+        $thumbPath = str_replace('reports/', 'reports/thumbnails/', $storedFilePath);
+
+        Storage::disk('public')->assertExists($storedFilePath);
+        Storage::disk('public')->assertExists($thumbPath);
+
+        $img = @imagecreatefromstring((string) Storage::disk('public')->get($storedFilePath));
+        if ($img !== false) {
+            // Preserves 3:4 portrait ratio -> 1200x1600 (longest side <= 1600)
+            $this->assertEquals(1200, imagesx($img));
+            $this->assertEquals(1600, imagesy($img));
+            imagedestroy($img);
+        }
+
+        $thumbImg = @imagecreatefromstring((string) Storage::disk('public')->get($thumbPath));
+        if ($thumbImg !== false) {
+            // Thumbnail preserves 3:4 portrait ratio -> 300x400 (longest side <= 400)
+            $this->assertEquals(300, imagesx($thumbImg));
+            $this->assertEquals(400, imagesy($thumbImg));
+            imagedestroy($thumbImg);
+        }
+    }
+
+    public function test_photo_upload_validates_dimensions(): void
+    {
+        $resident = User::factory()->create(['role' => 'resident']);
+        Sanctum::actingAs($resident);
+
+        // Image with dimensions smaller than 40x40
+        $tinyPhoto = UploadedFile::fake()->image('tiny.jpg', 20, 20);
+
+        $response = $this->postJson('/api/v1/reports', [
+            'category_id' => $this->roadCategory->id,
+            'title' => 'Issue with tiny photo',
+            'description' => 'Description must have enough length for validation.',
+            'latitude' => 14.1820,
+            'longitude' => 121.2850,
+            'address_text' => 'Purok 1, Rizal Avenue',
+            'photo' => $tinyPhoto,
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['photo'])
+            ->assertJsonPath('errors.photo.0', 'The photo dimensions must be between 40x40 and 8000x8000 pixels.');
     }
 
     public function test_hazardous_category_requires_safety_acknowledgement(): void
