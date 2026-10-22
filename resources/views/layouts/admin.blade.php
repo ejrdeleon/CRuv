@@ -40,11 +40,15 @@
             this.darkMode = !this.darkMode;
             localStorage.setItem('cruv_admin_theme', this.darkMode ? 'dark' : 'light');
             document.documentElement.classList.toggle('dark', this.darkMode);
+            setTimeout(() => window.CivicSpatialMap?.invalidateAll(), 60);
         },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
             localStorage.setItem('cruv_sidebar_collapsed', this.sidebarCollapsed ? 'true' : 'false');
-            setTimeout(() => window.dispatchEvent(new Event('resize')), 180);
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+                window.CivicSpatialMap?.invalidateAll();
+            }, 180);
         }
     }"
 >

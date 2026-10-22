@@ -49,3 +49,28 @@
         letter-spacing: -0.025em;
     }
 }
+
+/* Prevent Tailwind v4 Preflight from collapsing or hiding Leaflet OpenStreetMap tiles */
+.leaflet-container {
+    z-index: 10 !important;
+    font-family: var(--font-sans) !important;
+    background-color: #e2e8f0 !important;
+}
+
+.dark .leaflet-container {
+    background-color: #1e293b !important;
+}
+
+.leaflet-container img.leaflet-tile,
+.leaflet-pane img,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+    max-width: none !important;
+    max-height: none !important;
+    visibility: visible !important;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px !important;
+    padding: 2px !important;
+}
