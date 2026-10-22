@@ -70,4 +70,18 @@ class ReportImage extends Model
 
         return null;
     }
+
+    public function getIsLandscapeAttribute(): bool
+    {
+        $dim = $this->dimensions;
+
+        return $dim ? ($dim['width'] > $dim['height']) : true;
+    }
+
+    public function getIsPortraitAttribute(): bool
+    {
+        $dim = $this->dimensions;
+
+        return $dim ? ($dim['height'] > $dim['width']) : false;
+    }
 }
