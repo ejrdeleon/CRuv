@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Community Report App needs access to your camera to capture photos of reported issues.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Community Report App needs access to your photo library to select photos of reported issues.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Community Report App needs access to your location to accurately place issue pins on the map.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

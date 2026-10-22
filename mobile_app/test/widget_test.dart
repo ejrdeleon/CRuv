@@ -12,6 +12,7 @@ import 'package:community_report_app/features/reports/data/report_repository.dar
 import 'package:community_report_app/features/reports/domain/report_models.dart';
 import 'package:community_report_app/features/reports/presentation/report_form_screen.dart';
 import 'package:community_report_app/features/reports/presentation/report_provider.dart';
+import 'package:community_report_app/features/reports/presentation/widgets/report_photo_picker.dart';
 
 class _FakeReportRepository extends ReportRepository {
   int submitCallCount = 0;
@@ -228,10 +229,117 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
       expect(reportProvider.draft.title, 'Deep pothole near Santa Cruz Plaza');
 
-      // Resize to tablet landscape (1024x768) -> no overflow, draft still intact
+      // Resize to tablet portrait/view (1024x768) -> no overflow, draft still intact
       tester.view.physicalSize = const Size(1024, 768);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Camera button is prominent (>=48dp touch target), visible on small phone without scroll, and handles thumbnail actions',
+    (WidgetTester tester) async {
+      final fakeRepo = _FakeReportRepository();
+      final reportProvider = ReportProvider(fakeRepo);
+      final authProvider = AuthProvider(_FakeAuthRepository());
+
+      // Small phone screen: 360 x 640
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            ChangeNotifierProvider<ReportProvider>.value(value: reportProvider),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const Scaffold(
+              body: ReportFormBottomSheet(
+                isFullScreen: true,
+                disableMapTilesForTest: true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Find Camera and Gallery buttons
+      final cameraFinder = find.byKey(const Key('report_camera_button'));
+      final galleryFinder = find.byKey(const Key('report_gallery_button'));
+
+      expect(cameraFinder, findsOneWidget);
+      expect(galleryFinder, findsOneWidget);
+
+      // Verify camera button is directly visible without any scrolling on 360x640 screen
+      expect(tester.getTopLeft(cameraFinder).dy, lessThan(640));
+
+      // Verify touch target height is at least 48dp
+      final cameraSize = tester.getSize(cameraFinder);
+      expect(cameraSize.height, greaterThanOrEqualTo(48.0));
+
+      final gallerySize = tester.getSize(galleryFinder);
+      expect(gallerySize.height, greaterThanOrEqualTo(48.0));
+
+      // Verify initial label and icon
+      expect(find.text('Take Photo'), findsOneWidget);
+      expect(find.byIcon(Icons.camera_alt_rounded), findsOneWidget);
+      expect(find.text('Gallery'), findsOneWidget);
+
+      // Verify tablet size (1024x768) does not throw overflow or render issues
+      tester.view.physicalSize = const Size(1024, 768);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'ReportPhotoPicker renders thumbnail preview, retake button, and triggers remove callback',
+    (WidgetTester tester) async {
+      File? currentPhoto = File('test_evidence.jpg');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return ReportPhotoPicker(
+                  photo: currentPhoto,
+                  onPhotoChanged: (newPhoto) {
+                    setState(() {
+                      currentPhoto = newPhoto;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Verify thumbnail preview, badge, and buttons in attached state
+      expect(find.text('1/1 Attached'), findsOneWidget);
+      expect(find.text('Retake Photo'), findsOneWidget);
+      expect(find.text('Replace from Gallery'), findsOneWidget);
+      expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
+
+      // Tap remove button
+      await tester.tap(find.byIcon(Icons.delete_outline_rounded));
+      await tester.pumpAndSettle();
+
+      // Verify photo removed and widget reverts to unattached state
+      expect(currentPhoto, isNull);
+      expect(find.text('Take Photo'), findsOneWidget);
+      expect(find.text('Gallery'), findsOneWidget);
+      expect(find.text('1/1 Attached'), findsNothing);
     },
   );
 }

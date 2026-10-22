@@ -12,6 +12,7 @@ import '../../auth/presentation/auth_provider.dart';
 import '../domain/report_models.dart';
 import 'report_detail_screen.dart';
 import 'report_provider.dart';
+import 'widgets/report_photo_picker.dart';
 
 /// Official 26 barangays of Santa Cruz, Laguna, Philippines.
 const List<String> kSantaCruzBarangays = [
@@ -258,55 +259,6 @@ class _ReportFormBottomSheetState extends State<ReportFormBottomSheet> {
     }
 
     return action == 'keep';
-  }
-
-  Future<void> _pickPhoto(ImageSource source) async {
-    try {
-      // Resize and compress photo before upload (max 1600px, JPEG quality 80)
-      final pickedFile = await _imagePicker.pickImage(
-        source: source,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 80,
-      );
-      if (pickedFile != null && mounted) {
-        HapticFeedback.mediumImpact();
-        final file = File(pickedFile.path);
-        setState(() {
-          _selectedPhoto = file;
-          context.read<ReportProvider>().draft.photo = file;
-        });
-      }
-    } on PlatformException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      final isDenied = e.code.toLowerCase().contains('denied') ||
-          e.code.toLowerCase().contains('permission');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isDenied
-                ? 'Camera or photo permission was denied. Enable access in Settings.'
-                : 'Could not access camera or gallery (${e.message ?? e.code}).',
-          ),
-          action: isDenied
-              ? SnackBarAction(
-                  label: 'Settings',
-                  onPressed: () => Geolocator.openAppSettings(),
-                )
-              : null,
-        ),
-      );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not access camera or photo gallery.'),
-          ),
-        );
-      }
-    }
   }
 
   void _updatePinnedLocation(LatLng point) {
@@ -609,110 +561,18 @@ class _ReportFormBottomSheetState extends State<ReportFormBottomSheet> {
                         ),
                       ],
 
-                      // STEP 1: Photo Capture (Max 1 photo, resized max 1600px @ 80% JPEG)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '1. Photo Evidence (Max 1 Photo)',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ),
-                          if (_selectedPhoto != null)
-                            const Text(
-                              '1/1 attached',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.statusResolvedDot,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      if (_selectedPhoto != null) ...[
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(AppTheme.r10),
-                          child: Stack(
-                            children: [
-                              Image.file(
-                                _selectedPhoto!,
-                                height: 170,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => Container(
-                                  height: 120,
-                                  color: AppTheme.slate200,
-                                  alignment: Alignment.center,
-                                  child: const Text('Photo attached'),
-                                ),
-                              ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: IconButton.filled(
-                                  tooltip: 'Remove photo',
-                                  onPressed: state.isSubmitting
-                                      ? null
-                                      : () {
-                                          HapticFeedback.lightImpact();
-                                          setState(() {
-                                            _selectedPhoto = null;
-                                            context
-                                                .read<ReportProvider>()
-                                                .draft
-                                                .photo = null;
-                                          });
-                                        },
-                                  icon: const Icon(Icons.delete_outline),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: Colors.black87,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.s8),
-                      ],
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: state.isSubmitting
-                                  ? null
-                                  : () => _pickPhoto(ImageSource.camera),
-                              icon: const Icon(
-                                Icons.camera_alt_outlined,
-                                size: 18,
-                              ),
-                              label: Text(
-                                _selectedPhoto == null
-                                    ? 'Camera'
-                                    : 'Retake Photo',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppTheme.s8),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: state.isSubmitting
-                                  ? null
-                                  : () => _pickPhoto(ImageSource.gallery),
-                              icon: const Icon(
-                                Icons.photo_library_outlined,
-                                size: 18,
-                              ),
-                              label: Text(
-                                _selectedPhoto == null
-                                    ? 'Gallery'
-                                    : 'Replace Photo',
-                              ),
-                            ),
-                          ),
-                        ],
+                      // STEP 1: Photo Capture (Dedicated, accessible, thumb-friendly picker)
+                      ReportPhotoPicker(
+                        photo: _selectedPhoto,
+                        isSubmitting: state.isSubmitting,
+                        imagePicker: _imagePicker,
+                        onPhotoChanged: (newPhoto) {
+                          setState(() {
+                            _selectedPhoto = newPhoto;
+                            context.read<ReportProvider>().draft.photo =
+                                newPhoto;
+                          });
+                        },
                       ),
                       const SizedBox(height: AppTheme.s20),
 
