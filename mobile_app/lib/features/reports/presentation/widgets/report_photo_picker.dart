@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/image_processor.dart';
 
 /// Reusable photo capture & preview component for Community Reports.
 /// Provides direct camera capture, gallery selection, thumbnail preview,
@@ -46,8 +47,11 @@ class _ReportPhotoPickerState extends State<ReportPhotoPicker> {
         return;
       }
       if (response.file != null && mounted) {
+        final processed = await ImageProcessor.processAndOrientImage(
+          File(response.file!.path),
+        );
         HapticFeedback.mediumImpact();
-        widget.onPhotoChanged(File(response.file!.path));
+        widget.onPhotoChanged(processed.file);
       } else if (response.exception != null && mounted) {
         _handlePickerError(response.exception!);
       }
@@ -66,17 +70,19 @@ class _ReportPhotoPickerState extends State<ReportPhotoPicker> {
     });
 
     try {
-      // Cap at 1600px and 80% JPEG quality for fast mobile uploads
-      final XFile? picked = await _picker.pickImage(
-        source: source,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 80,
-      );
+      // Pick original image bytes so EXIF orientation tags remain intact
+      final XFile? picked = await _picker.pickImage(source: source);
 
       if (picked != null && mounted) {
-        HapticFeedback.mediumImpact();
-        widget.onPhotoChanged(File(picked.path));
+        // Read EXIF orientation, physically bake rotation into pixels,
+        // and resize by longest side (max 1600px) keeping aspect ratio.
+        final processed = await ImageProcessor.processAndOrientImage(
+          File(picked.path),
+        );
+        if (mounted) {
+          HapticFeedback.mediumImpact();
+          widget.onPhotoChanged(processed.file);
+        }
       }
     } on PlatformException catch (e) {
       if (mounted) {
@@ -171,7 +177,10 @@ class _ReportPhotoPickerState extends State<ReportPhotoPicker> {
         // Thumbnail Preview with retake and remove actions
         if (hasPhoto) ...[
           Container(
+            height: 200,
+            width: double.infinity,
             decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(AppTheme.r10),
               border: Border.all(
                 color: colorScheme.outlineVariant.withValues(alpha: 0.5),
@@ -179,12 +188,13 @@ class _ReportPhotoPickerState extends State<ReportPhotoPicker> {
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
+              alignment: Alignment.center,
               children: [
                 Image.file(
                   widget.photo!,
-                  height: 150,
+                  height: 200,
                   width: double.infinity,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   errorBuilder: (_, _, _) => Container(
                     height: 120,
                     color: colorScheme.surfaceContainerHighest,
