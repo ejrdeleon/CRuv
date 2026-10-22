@@ -105,27 +105,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: const BoxDecoration(
-                                            color: AppTheme.statusResolvedDot,
-                                            shape: BoxShape.circle,
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: const BoxDecoration(
+                                              color: AppTheme.statusResolvedDot,
+                                              shape: BoxShape.circle,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Live Community Map',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium,
-                                        ),
-                                      ],
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Live Community Map',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      '${pins.length} reported nearby',
+                                      '${pins.length} nearby',
                                       style:
                                           Theme.of(context).textTheme.bodySmall,
                                     ),
@@ -382,104 +389,126 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: AppTheme.s12),
 
                         // BENTO ROW 3 (Asymmetrical Smaller Tiles: My Active Reports + Local Safety Alerts)
-                        // Note: "Community Announcements" is intentionally hidden because no backend announcements table exists yet.
-                        IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Tile 3A: My Active Reports (Count)
-                              Expanded(
-                                flex: 6,
-                                child: Card(
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(
-                                      AppTheme.radiusBento,
-                                    ),
-                                    onTap: widget.onNavigateToMyReports,
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.all(AppTheme.s16),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                        // Responsive LayoutBuilder: stacks vertically on narrow phones (<360dp) or large text zoom to prevent squishing
+                        LayoutBuilder(
+                          builder: (context, rowConstraints) {
+                            final textScale =
+                                MediaQuery.textScalerOf(context).scale(1.0);
+                            final stackVertical = rowConstraints.maxWidth < 360 ||
+                                textScale >= 1.25;
+
+                            final activeReportsTile = Card(
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusBento,
+                                ),
+                                onTap: widget.onNavigateToMyReports,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppTheme.s16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              const StatusPill(
-                                                status: 'in_progress',
-                                                customLabel: 'My Active',
-                                              ),
-                                              Icon(
-                                                Icons.arrow_forward_rounded,
-                                                size: 18,
-                                                color: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.color,
-                                              ),
-                                            ],
+                                          const Flexible(
+                                            child: StatusPill(
+                                              status: 'in_progress',
+                                              customLabel: 'My Active',
+                                            ),
                                           ),
-                                          const SizedBox(height: AppTheme.s12),
-                                          Text(
-                                            stats.active.toString(),
-                                            style: Theme.of(context)
+                                          const SizedBox(width: 4),
+                                          Icon(
+                                            Icons.arrow_forward_rounded,
+                                            size: 18,
+                                            color: Theme.of(context)
                                                 .textTheme
-                                                .headlineMedium,
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            'My Active Reports (${stats.total} total)',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall,
+                                                .bodySmall
+                                                ?.color,
                                           ),
                                         ],
                                       ),
-                                    ),
+                                      const SizedBox(height: AppTheme.s12),
+                                      Text(
+                                        stats.active.toString(),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'My Active Reports (${stats.total} total)',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: AppTheme.s12),
+                            );
 
-                              // Tile 3B: Local Safety Alerts (Live Urgent Hazard Count from API)
-                              Expanded(
-                                flex: 5,
-                                child: Card(
-                                  child: Padding(
-                                    padding:
-                                        const EdgeInsets.all(AppTheme.s16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const PriorityPill(priority: 'urgent'),
-                                        const SizedBox(height: AppTheme.s12),
-                                        Text(
-                                          stats.safetyAlerts.toString(),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headlineMedium,
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Local Safety Alerts',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall,
-                                        ),
-                                      ],
+                            final safetyAlertsTile = Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppTheme.s16),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const PriorityPill(priority: 'urgent'),
+                                    const SizedBox(height: AppTheme.s12),
+                                    Text(
+                                      stats.safetyAlerts.toString(),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineMedium,
                                     ),
-                                  ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Local Safety Alerts',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
+                            );
+
+                            if (stackVertical) {
+                              return Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
+                                children: [
+                                  activeReportsTile,
+                                  const SizedBox(height: AppTheme.s12),
+                                  safetyAlertsTile,
+                                ],
+                              );
+                            }
+
+                            return IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(flex: 6, child: activeReportsTile),
+                                  const SizedBox(width: AppTheme.s12),
+                                  Expanded(flex: 5, child: safetyAlertsTile),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: AppTheme.s20),
 
@@ -521,10 +550,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'My Recent Reports',
-                              style: Theme.of(context).textTheme.titleMedium,
+                            Expanded(
+                              child: Text(
+                                'My Recent Reports',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             TextButton(
                               onPressed: widget.onNavigateToMyReports,
                               child: const Text('View All'),

@@ -89,28 +89,30 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Backend Server URL'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Set the host IP address where "php artisan serve" is running:',
-              style: TextStyle(fontSize: 12.5),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: serverController,
-              decoration: const InputDecoration(
-                labelText: 'API Base URL',
-                hintText: 'http://192.168.1.7:8000/api/v1',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Set the host IP address where "php artisan serve" is running:',
+                style: TextStyle(fontSize: 12.5),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '• Physical phone on Wi-Fi: http://192.168.1.x:8000/api/v1\n• Android Emulator: http://10.0.2.2:8000/api/v1\n• Windows Desktop: http://127.0.0.1:8000/api/v1',
-              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: serverController,
+                decoration: const InputDecoration(
+                  labelText: 'API Base URL',
+                  hintText: 'http://192.168.1.7:8000/api/v1',
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '• Physical phone on Wi-Fi: http://192.168.1.x:8000/api/v1\n• Android Emulator: http://10.0.2.2:8000/api/v1\n• Windows Desktop: http://127.0.0.1:8000/api/v1',
+                style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(

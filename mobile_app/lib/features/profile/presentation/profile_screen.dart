@@ -163,12 +163,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     children: [
                                       Text(
                                         user?.name ?? 'Resident',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium,
                                       ),
                                       Text(
                                         user?.email ?? '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall,

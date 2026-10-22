@@ -7,9 +7,12 @@ import 'package:community_report_app/core/theme/app_theme.dart';
 import 'package:community_report_app/features/auth/data/auth_repository.dart';
 import 'package:community_report_app/features/auth/domain/user_model.dart';
 import 'package:community_report_app/features/auth/presentation/auth_provider.dart';
+import 'package:community_report_app/features/auth/presentation/login_register_screen.dart';
 import 'package:community_report_app/features/auth/presentation/splash_screen.dart';
+import 'package:community_report_app/features/home/presentation/main_shell_screen.dart';
 import 'package:community_report_app/features/reports/data/report_repository.dart';
 import 'package:community_report_app/features/reports/domain/report_models.dart';
+import 'package:community_report_app/features/reports/presentation/report_detail_screen.dart';
 import 'package:community_report_app/features/reports/presentation/report_form_screen.dart';
 import 'package:community_report_app/features/reports/presentation/report_provider.dart';
 import 'package:community_report_app/features/reports/presentation/widgets/report_photo_picker.dart';
@@ -51,6 +54,23 @@ class _FakeReportRepository extends ReportRepository {
       reports: const <ReportModel>[],
       stats: const UserStats(),
       communityPins: const <CommunityPinModel>[],
+    );
+  }
+
+  @override
+  Future<ReportModel> fetchReportDetail(int id) async {
+    return const ReportModel(
+      id: 101,
+      referenceNumber: 'BRGY-2026-000101-LAG',
+      title: 'Deep pothole along P. Guevara Avenue',
+      description: 'Dangerous pothole near the marketplace.',
+      priority: 'urgent',
+      status: 'in_progress',
+      statusLabel: 'In Progress',
+      latitude: 14.2816,
+      longitude: 121.4146,
+      addressText: 'P. Guevara Ave, Santa Cruz, Laguna',
+      barangay: 'Poblacion I',
     );
   }
 
@@ -340,6 +360,134 @@ void main() {
       expect(find.text('Take Photo'), findsOneWidget);
       expect(find.text('Gallery'), findsOneWidget);
       expect(find.text('1/1 Attached'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'HomeScreen and MainShell adapt seamlessly across all device sizes (320x568 compact, 390x844 phone, 768x1024 tablet)',
+    (WidgetTester tester) async {
+      final fakeRepo = _FakeReportRepository();
+      final reportProvider = ReportProvider(fakeRepo);
+      final authProvider = AuthProvider(_FakeAuthRepository());
+
+      Widget buildApp({required double fontScale}) {
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            ChangeNotifierProvider<ReportProvider>.value(value: reportProvider),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(fontScale),
+              ),
+              child: child!,
+            ),
+            home: const MainShellScreen(),
+          ),
+        );
+      }
+
+      // 1. Test Ultra-compact Phone (320 x 568 - iPhone SE / Compact Android) with large font scale (1.3x)
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildApp(fontScale: 1.3));
+      await tester.pumpAndSettle();
+
+      // Must have zero overflow exceptions
+      expect(tester.takeException(), isNull);
+
+      // Verify bottom navigation bar renders on phones
+      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(NavigationRail), findsNothing);
+
+      // Verify Bento items are rendered
+      expect(find.text('Live Community Map'), findsOneWidget);
+      expect(find.text('Report an Issue'), findsOneWidget);
+
+      // 2. Test Standard Phone (390 x 844 - iPhone 14/15, modern Android)
+      tester.view.physicalSize = const Size(390, 844);
+      await tester.pumpWidget(buildApp(fontScale: 1.0));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(NavigationBar), findsOneWidget);
+
+      // 3. Test Tablet (768 x 1024 - iPad / Android Tablet)
+      tester.view.physicalSize = const Size(768, 1024);
+      await tester.pumpWidget(buildApp(fontScale: 1.0));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      // NavigationRail must activate on tablet width >= 640
+      expect(find.byType(NavigationRail), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ReportDetailScreen and LoginRegisterScreen render without overflow on ultra-small phones (320x568) with 1.4x font scale and on tablets (1024x768)',
+    (WidgetTester tester) async {
+      final fakeRepo = _FakeReportRepository();
+      final reportProvider = ReportProvider(fakeRepo);
+      final authProvider = AuthProvider(_FakeAuthRepository());
+
+      // Ultra-small device: 320 x 568 with 1.4x accessibility font scale
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+            ChangeNotifierProvider<ReportProvider>.value(value: reportProvider),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(1.4),
+              ),
+              child: child!,
+            ),
+            home: const ReportDetailScreen(reportId: 101),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Status Timeline'), findsOneWidget);
+
+      // Now test on tablet (1024 x 768)
+      tester.view.physicalSize = const Size(1024, 768);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      // Test LoginRegisterScreen on tablet
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ApiClient>.value(value: ApiClient()),
+            ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const LoginRegisterScreen(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Sign In'), findsNWidgets(2));
+      expect(find.text('Register'), findsOneWidget);
     },
   );
 }

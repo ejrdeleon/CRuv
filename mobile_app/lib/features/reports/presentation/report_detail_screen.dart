@@ -674,16 +674,20 @@ class _LifecycleProgressStrip extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight:
-                      isCompleted ? FontWeight.w700 : FontWeight.w500,
-                  color: isCompleted
-                      ? (isDark ? AppTheme.slate50 : AppTheme.textPrimary)
-                      : (isDark ? AppTheme.slate400 : AppTheme.textSecondary),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight:
+                        isCompleted ? FontWeight.w700 : FontWeight.w500,
+                    color: isCompleted
+                        ? (isDark ? AppTheme.slate50 : AppTheme.textPrimary)
+                        : (isDark ? AppTheme.slate400 : AppTheme.textSecondary),
+                  ),
                 ),
               ),
             ],

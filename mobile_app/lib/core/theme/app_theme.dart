@@ -596,13 +596,17 @@ class StatusPill extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            customLabel ?? token.label,
-            style: TextStyle(
-              fontFamily: AppTheme.fontFamily,
-              color: token.fg,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              customLabel ?? token.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppTheme.fontFamily,
+                color: token.fg,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -640,13 +644,17 @@ class PriorityPill extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            token.label,
-            style: TextStyle(
-              fontFamily: AppTheme.fontFamily,
-              color: token.fg,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              token.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppTheme.fontFamily,
+                color: token.fg,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

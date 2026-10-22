@@ -50,10 +50,15 @@ Future<void> showReportIssueBottomSheet(
   CategoryModel? initialCategory,
 }) async {
   HapticFeedback.mediumImpact();
+  final isWide = MediaQuery.sizeOf(context).width >= 640;
+
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    constraints: BoxConstraints(
+      maxWidth: isWide ? 620 : double.infinity,
+    ),
     backgroundColor: Colors.transparent,
     builder: (ctx) => ReportFormBottomSheet(initialCategory: initialCategory),
   );
@@ -227,9 +232,13 @@ class _ReportFormBottomSheetState extends State<ReportFormBottomSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Unsaved Report Draft'),
-        content: const Text(
-          'Would you like to keep your draft in memory for later, or discard your changes?',
+        content: const SingleChildScrollView(
+          child: Text(
+            'Would you like to keep your draft in memory for later, or discard your changes?',
+          ),
         ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actionsOverflowButtonSpacing: 6,
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop('keep'),

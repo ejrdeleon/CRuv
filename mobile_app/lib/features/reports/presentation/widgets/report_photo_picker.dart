@@ -226,7 +226,8 @@ class _ReportPhotoPickerState extends State<ReportPhotoPicker> {
         // Action Buttons: Primary Camera (>=48dp touch target) & Secondary Gallery
         LayoutBuilder(
           builder: (context, constraints) {
-            final isSmall = constraints.maxWidth < 320;
+            final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+            final isSmall = constraints.maxWidth < 340 || textScale >= 1.25;
 
             final cameraButton = FilledButton.icon(
               key: const Key('report_camera_button'),

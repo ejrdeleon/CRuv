@@ -208,14 +208,19 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
                         final isTablet = constraints.maxWidth >= 720;
 
                         if (isTablet) {
+                          final textScale =
+                              MediaQuery.textScalerOf(context).scale(1.0);
+                          final cardExtent =
+                              (160.0 * textScale).clamp(156.0, 240.0);
+
                           return GridView.builder(
                             padding: const EdgeInsets.all(AppTheme.spacingMd),
                             gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
-                              mainAxisExtent: 156,
+                              mainAxisExtent: cardExtent,
                             ),
                             itemCount: provider.reports.length,
                             itemBuilder: (context, index) {
@@ -316,15 +321,20 @@ class ReportCardItem extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        report.referenceNumber,
-                        style: TextStyle(
-                          fontFamily: AppTheme.fontFamily,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12.5,
-                          color: theme.colorScheme.primary,
+                      Expanded(
+                        child: Text(
+                          report.referenceNumber,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: AppTheme.fontFamily,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       StatusPill(
                         status: report.status,
                         customLabel: report.statusLabel,
