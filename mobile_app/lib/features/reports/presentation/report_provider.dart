@@ -1,9 +1,48 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../core/network/api_client.dart';
 import '../../auth/domain/user_model.dart';
 import '../data/report_repository.dart';
 import '../domain/report_models.dart';
+
+/// In-memory draft model so rotation, backgrounding, or failed submits never lose user input.
+class ReportDraft {
+  int? categoryId;
+  String title;
+  String description;
+  String priority;
+  String barangay;
+  String addressText;
+  String landmark;
+  LatLng pinnedLocation;
+  bool locationManuallyChanged;
+  bool hazardAcknowledged;
+  File? photo;
+
+  ReportDraft({
+    this.categoryId,
+    this.title = '',
+    this.description = '',
+    this.priority = 'medium',
+    this.barangay = 'Poblacion I',
+    this.addressText = '',
+    this.landmark = '',
+    this.pinnedLocation = const LatLng(14.2816, 121.4146),
+    this.locationManuallyChanged = false,
+    this.hazardAcknowledged = false,
+    this.photo,
+  });
+
+  bool get hasEnteredData {
+    return photo != null ||
+        categoryId != null ||
+        title.trim().isNotEmpty ||
+        description.trim().isNotEmpty ||
+        landmark.trim().isNotEmpty ||
+        locationManuallyChanged;
+  }
+}
 
 class ReportProvider extends ChangeNotifier {
   final ReportRepository _repository;
@@ -17,11 +56,15 @@ class ReportProvider extends ChangeNotifier {
   String _statusFilter = 'all';
   String _searchQuery = '';
 
+  bool _isLoadingCategories = false;
+  String? _categoriesError;
   bool _isLoadingList = false;
   bool _isLoadingDetail = false;
   bool _isSubmitting = false;
   bool _isOffline = false;
   String? _errorMessage;
+
+  ReportDraft _draft = ReportDraft();
 
   ReportProvider(this._repository);
 
@@ -32,11 +75,23 @@ class ReportProvider extends ChangeNotifier {
   UserStats get stats => _stats;
   String get statusFilter => _statusFilter;
   String get searchQuery => _searchQuery;
+  bool get isLoadingCategories => _isLoadingCategories;
+  String? get categoriesError => _categoriesError;
   bool get isLoadingList => _isLoadingList;
   bool get isLoadingDetail => _isLoadingDetail;
   bool get isSubmitting => _isSubmitting;
   bool get isOffline => _isOffline;
   String? get errorMessage => _errorMessage;
+  ReportDraft get draft => _draft;
+
+  void clearDraft({String? defaultBarangay, String? defaultAddress}) {
+    _draft = ReportDraft(
+      barangay: defaultBarangay ?? 'Poblacion I',
+      addressText: defaultAddress ?? '',
+    );
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   Future<void> loadInitialData() async {
     await Future.wait([
@@ -46,11 +101,23 @@ class ReportProvider extends ChangeNotifier {
   }
 
   Future<void> loadCategories() async {
+    if (_isLoadingCategories) {
+      return;
+    }
+    _isLoadingCategories = true;
+    _categoriesError = null;
+    notifyListeners();
+
     try {
       _categories = await _repository.fetchCategories();
-      notifyListeners();
+      _categoriesError = null;
+    } on ApiException catch (e) {
+      _categoriesError = e.message;
     } catch (_) {
-      // Categories will be retried when opening the report sheet if empty.
+      _categoriesError = 'Unable to load categories. Check your connection.';
+    } finally {
+      _isLoadingCategories = false;
+      notifyListeners();
     }
   }
 
@@ -121,8 +188,14 @@ class ReportProvider extends ChangeNotifier {
     bool isHazardWarningAcknowledged = false,
     File? photo,
   }) async {
+    // Prevent duplicate submissions if already in-flight
+    if (_isSubmitting) {
+      return null;
+    }
+
     _isSubmitting = true;
     _errorMessage = null;
+    _isOffline = false;
     notifyListeners();
 
     try {
@@ -143,9 +216,10 @@ class ReportProvider extends ChangeNotifier {
       return created;
     } on ApiException catch (e) {
       _errorMessage = e.message;
+      _isOffline = e.isOffline;
       return null;
     } catch (_) {
-      _errorMessage = 'Failed to submit report. Please try again.';
+      _errorMessage = 'Failed to submit report. Please check your connection and retry.';
       return null;
     } finally {
       _isSubmitting = false;

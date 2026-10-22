@@ -240,7 +240,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: slate900,
-          minimumSize: const Size.fromHeight(minTouchTarget),
+          minimumSize: const Size(64, minTouchTarget),
           padding: const EdgeInsets.symmetric(horizontal: s16, vertical: s12),
           side: const BorderSide(color: slate300),
           shape: RoundedRectangleBorder(
