@@ -69,15 +69,34 @@ class AuthWorkflowTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
-    public function test_resident_cannot_access_admin_dashboard_or_reports(): void
+    public function test_resident_cannot_access_admin_dashboard_or_reports_and_never_redirect_loops(): void
     {
         $resident = User::factory()->create([
             'role' => 'resident',
         ]);
 
-        $this->actingAs($resident)->get(route('admin.dashboard'))->assertStatus(403);
-        $this->actingAs($resident)->get(route('admin.reports'))->assertStatus(403);
-        $this->actingAs($resident)->get(route('admin.map'))->assertStatus(403);
+        // Visiting root with a stale resident session logs out and lands cleanly on /login (200) without redirect loops
+        $this->actingAs($resident)
+            ->followingRedirects()
+            ->get('/')
+            ->assertStatus(200)
+            ->assertSee('Residents use the mobile app.');
+
+        $this->assertGuest();
+
+        // Visiting /login with a stale resident session logs out and renders /login (200) without redirect loops
+        $this->actingAs($resident)
+            ->followingRedirects()
+            ->get('/login')
+            ->assertStatus(200);
+
+        $this->assertGuest();
+
+        // Visiting /admin/dashboard with a stale resident session logs out and redirects to /login
+        $response = $this->actingAs($resident)->get(route('admin.dashboard'));
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors(['email' => 'Residents use the mobile app.']);
+        $this->assertGuest();
     }
 
     public function test_admin_can_access_admin_portal_sections(): void

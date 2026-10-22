@@ -7,6 +7,7 @@ use App\Livewire\Admin\InteractiveMap;
 use App\Livewire\Admin\ReportDetail as AdminReportDetail;
 use App\Livewire\Admin\ReportManagement;
 use App\Livewire\Admin\StaffManagement;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -18,9 +19,24 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Root URL redirects to the admin login (or admin dashboard if already signed in as admin/staff)
-Route::get('/', function () {
-    if (Auth::check() && in_array(Auth::user()->role, ['admin', 'staff'], true)) {
-        return redirect()->route('admin.dashboard');
+Route::get('/', function (Request $request) {
+    if (Auth::check()) {
+        $user = Auth::user();
+
+        if ($user && in_array($user->role, ['admin', 'staff'], true) && $user->is_active) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Clear any leftover non-admin/resident browser session to prevent guest<->root redirect loops
+        Auth::guard('web')->logout();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return redirect()->route('login')->withErrors([
+            'email' => 'Residents use the mobile app.',
+        ]);
     }
 
     return redirect()->route('login');

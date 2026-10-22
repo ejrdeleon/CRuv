@@ -1,0 +1,10 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Convenience proxy so running `php artisan serve` inside `mobile_app/`
+ * automatically delegates to the Laravel root `artisan` file.
+ */
+$rootPath = dirname(__DIR__);
+chdir($rootPath);
+require $rootPath.'/artisan';
