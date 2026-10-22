@@ -59,23 +59,29 @@ class ReportDetail extends Component
 
     public function mount(Report $report)
     {
-        $this->report = $report->load([
-            'category',
-            'department',
-            'assignedStaff',
-            'duplicateOf',
-            'duplicates',
-            'user',
-            'images',
-            'statusHistories.user',
-            'comments.user',
-        ]);
+        $this->report = $report;
+        $this->loadReportRelations();
 
         $this->newStatus = $report->status;
         $this->selectedPriority = $report->priority;
         $this->assignedDepartmentId = $report->department_id;
         $this->assignedStaffId = $report->assigned_to;
         $this->resolutionNotes = $report->resolution_notes ?? '';
+    }
+
+    private function loadReportRelations(): void
+    {
+        $this->report->load([
+            'category:id,name,slug,description,is_hazardous,safety_advisory,color',
+            'department:id,name,code',
+            'assignedStaff:id,name,email',
+            'duplicateOf:id,reference_number,title',
+            'duplicates:id,reference_number,title,duplicate_of_id',
+            'user:id,name,phone,email,barangay',
+            'images',
+            'statusHistories.user:id,name',
+            'comments.user:id,name,role',
+        ]);
     }
 
     public function updatePriority()
@@ -204,6 +210,7 @@ class ReportDetail extends Component
 
         $this->showStatusModal = false;
         $this->report->refresh();
+        $this->loadReportRelations();
         session()->flash('success', "Report status updated to {$label}.");
     }
 
@@ -277,6 +284,7 @@ class ReportDetail extends Component
 
         $this->showAssignModal = false;
         $this->report->refresh();
+        $this->loadReportRelations();
         session()->flash('success', 'Assignment updated successfully.');
     }
 
@@ -313,6 +321,7 @@ class ReportDetail extends Component
 
         $this->newComment = '';
         $this->report->refresh();
+        $this->loadReportRelations();
         session()->flash('success', $this->isInternalComment ? 'Internal staff note added.' : 'Public update posted to resident timeline.');
     }
 
@@ -320,7 +329,11 @@ class ReportDetail extends Component
     {
         $departments = Department::where('is_active', true)->get();
         $staffMembers = User::whereIn('role', ['staff', 'admin'])->where('is_active', true)->get();
-        $otherReports = Report::where('id', '!=', $this->report->id)->orderByDesc('created_at')->take(20)->get();
+        $otherReports = Report::where('id', '!=', $this->report->id)
+            ->select(['id', 'reference_number', 'title'])
+            ->orderByDesc('created_at')
+            ->take(20)
+            ->get();
 
         return view('livewire.admin.report-detail', [
             'departments' => $departments,

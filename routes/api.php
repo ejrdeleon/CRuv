@@ -6,10 +6,10 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ReportController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->name('api.v1.')->group(function (): void {
+Route::prefix('v1')->name('api.v1.')->middleware('throttle:api')->group(function (): void {
     // Public auth & reference endpoints
-    Route::post('/register', [AuthController::class, 'register'])->name('register');
-    Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login');
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 
     // Protected resident & authenticated endpoints
@@ -22,7 +22,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/my-reports', [ReportController::class, 'index'])->name('reports.mine');
-        Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+        Route::post('/reports', [ReportController::class, 'store'])->middleware('throttle:uploads')->name('reports.store');
         Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
         Route::put('/reports/{report}', [ReportController::class, 'update'])->name('reports.update');
     });

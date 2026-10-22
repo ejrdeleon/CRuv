@@ -9,6 +9,7 @@ use App\Models\ReportAssignment;
 use App\Models\ReportStatusHistory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 trait InteractsWithTriageDrawer
 {
@@ -154,6 +155,11 @@ trait InteractsWithTriageDrawer
         );
 
         session()->flash('success', "Ticket #{$report->reference_number} updated ({$report->status_label}).");
+
+        // Invalidate cached aggregates so dashboards and maps refresh instantly
+        Cache::forget('admin:dashboard:metrics');
+        Cache::forget('api:community_pins');
+        Cache::forget('api:safety_alerts_count');
     }
 
     /**

@@ -35,7 +35,12 @@ class InteractiveMap extends Component
 
     public function render()
     {
-        $query = Report::with(['category', 'department', 'images'])
+        // Select only needed marker fields; do not eager load images for full table
+        $query = Report::with(['category:id,name,is_hazardous', 'department:id,name'])
+            ->select([
+                'id', 'reference_number', 'title', 'category_id', 'department_id',
+                'status', 'priority', 'latitude', 'longitude', 'address_text', 'created_at',
+            ])
             ->whereNotNull('latitude')
             ->whereNotNull('longitude');
 
@@ -63,7 +68,7 @@ class InteractiveMap extends Component
             $query->where('barangay', $this->barangayFilter);
         }
 
-        $reports = $query->orderByDesc('created_at')->get();
+        $reports = $query->orderByDesc('created_at')->take(200)->get();
 
         $mapMarkers = $this->formatMapMarkers($reports);
 

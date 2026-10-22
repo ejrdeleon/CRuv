@@ -41,7 +41,7 @@ class Analytics extends Component
             $query->where('department_id', $this->departmentFilter);
         }
 
-        $reports = $query->orderBy('created_at', 'desc')->get();
+        $query->orderBy('created_at', 'desc');
 
         $fileName = 'barangay_damage_reports_'.date('Ymd_His').'.csv';
 
@@ -53,7 +53,7 @@ class Analytics extends Component
             'Expires' => '0',
         ];
 
-        return response()->stream(function () use ($reports) {
+        return response()->stream(function () use ($query) {
             $file = fopen('php://output', 'w');
 
             // Header row
@@ -74,7 +74,7 @@ class Analytics extends Component
                 'Resolution Notes',
             ]);
 
-            foreach ($reports as $r) {
+            foreach ($query->cursor() as $r) {
                 fputcsv($file, [
                     $r->reference_number,
                     $r->title,
@@ -109,9 +109,15 @@ class Analytics extends Component
             $baseQuery->where('department_id', $this->departmentFilter);
         }
 
-        $totalCount = (clone $baseQuery)->count();
-        $resolvedCount = (clone $baseQuery)->where('status', 'resolved')->count();
-        $urgentCount = (clone $baseQuery)->whereIn('priority', ['urgent', 'high'])->count();
+        $agg = (clone $baseQuery)->selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved_count,
+            SUM(CASE WHEN priority IN ('urgent', 'high') THEN 1 ELSE 0 END) as urgent_count
+        ")->first();
+
+        $totalCount = (int) ($agg->total ?? 0);
+        $resolvedCount = (int) ($agg->resolved_count ?? 0);
+        $urgentCount = (int) ($agg->urgent_count ?? 0);
         $resolutionRate = $totalCount > 0 ? round(($resolvedCount / $totalCount) * 100, 1) : 0;
 
         // Breakdown by barangay
@@ -128,9 +134,11 @@ class Analytics extends Component
         }])->get();
 
         // Reports sample list for print
-        $reportsList = (clone $baseQuery)->with(['category', 'department', 'assignedStaff'])
+        $reportsList = (clone $baseQuery)
+            ->with(['category:id,name', 'department:id,name', 'assignedStaff:id,name'])
+            ->select(['id', 'reference_number', 'title', 'category_id', 'department_id', 'assigned_to', 'priority', 'status', 'barangay', 'created_at', 'resolved_at'])
             ->orderByDesc('created_at')
-            ->take(50)
+            ->take(30)
             ->get();
 
         $categories = ReportCategory::where('is_active', true)->get();

@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\ReportCategory;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -140,6 +141,7 @@ class StaffManagement extends Component
             'is_active' => true,
         ]);
 
+        Cache::forget('admin:departments:active');
         ActivityLog::log('department_created', "Created department {$dept->name} ({$dept->code})", $dept);
 
         $this->showNewDeptModal = false;
@@ -241,6 +243,8 @@ class StaffManagement extends Component
         }
 
         $this->showCategoryModal = false;
+        Cache::forget('admin:categories:active');
+        Cache::forget('api:categories:active');
     }
 
     public function toggleCategoryActive(int $id): void
@@ -249,6 +253,8 @@ class StaffManagement extends Component
         $category->is_active = ! $category->is_active;
         $category->save();
 
+        Cache::forget('admin:categories:active');
+        Cache::forget('api:categories:active');
         ActivityLog::log('category_status_toggled', "Category {$category->name} set to ".($category->is_active ? 'Active' : 'Inactive'), $category);
         session()->flash('success', "Category '{$category->name}' is now ".($category->is_active ? 'Active' : 'Deactivated').'.');
     }
@@ -266,6 +272,8 @@ class StaffManagement extends Component
         $categoryName = $category->name;
         $category->delete();
 
+        Cache::forget('admin:categories:active');
+        Cache::forget('api:categories:active');
         ActivityLog::log('category_deleted', "Deleted category {$categoryName}");
         session()->flash('success', "Category '{$categoryName}' deleted successfully.");
     }
