@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Admin\ReportDetail as AdminReportDetail;
+use App\Livewire\Admin\ReportManagement as AdminReportManagement;
 use App\Models\Department;
 use App\Models\Report;
 use App\Models\ReportCategory;
@@ -177,5 +179,86 @@ class ReportWorkflowTest extends TestCase
         $secondReport->refresh();
         $this->assertEquals('duplicate', $secondReport->status);
         $this->assertEquals($primaryReport->id, $secondReport->duplicate_of_id);
+    }
+
+    public function test_issue_queue_shares_filtered_data_with_map_and_handles_row_selection_and_null_coordinates(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $resident = User::factory()->create(['role' => 'resident']);
+        $category = ReportCategory::first();
+
+        $mappedReport = Report::create([
+            'reference_number' => 'BRGY-MAP-0001',
+            'user_id' => $resident->id,
+            'category_id' => $category->id,
+            'title' => 'Flooded intersection near plaza',
+            'description' => 'Deep standing water blocking tricycles.',
+            'priority' => 'urgent',
+            'status' => 'submitted',
+            'latitude' => 14.2816,
+            'longitude' => 121.4146,
+            'address_text' => 'P. Guevara Ave',
+            'barangay' => 'Poblacion I',
+            'city' => 'Santa Cruz',
+            'province' => 'Laguna',
+        ]);
+
+        $noCoordsReport = Report::create([
+            'reference_number' => 'BRGY-MAP-0002',
+            'user_id' => $resident->id,
+            'category_id' => $category->id,
+            'title' => 'Unmapped streetlight outage',
+            'description' => 'Reported without GPS coordinates.',
+            'priority' => 'low',
+            'status' => 'resolved',
+            'latitude' => 0.0,
+            'longitude' => 0.0,
+            'address_text' => 'Sitio Tres',
+            'barangay' => 'Bubukal',
+            'city' => 'Santa Cruz',
+            'province' => 'Laguna',
+        ]);
+
+        // 1. Operations Workspace renders the shared spatial map with mapped reports
+        Livewire::actingAs($admin)
+            ->test(AdminDashboard::class)
+            ->assertSee('admin-dashboard-map')
+            ->assertViewHas('mapReports', function (array $markers) use ($mappedReport) {
+                return count($markers) === 1 && $markers[0]['id'] === $mappedReport->id;
+            });
+
+        // 2. Issue Queue & Case Management renders the shared spatial map and syncs markers with table filters
+        $component = Livewire::actingAs($admin)
+            ->test(AdminReportManagement::class)
+            ->assertSee('issue-queue-map')
+            ->assertViewHas('mapReports', function (array $markers) use ($mappedReport) {
+                return count($markers) === 1 && $markers[0]['id'] === $mappedReport->id;
+            });
+
+        // Filtering by 'resolved' excludes the 'submitted' mapped report from both table and map
+        $component->set('statusFilter', 'resolved')
+            ->assertViewHas('mapReports', function (array $markers) {
+                return count($markers) === 0;
+            })
+            ->assertDispatched('sync-admin-map-markers');
+
+        // Resetting filters restores the mapped report
+        $component->call('resetFilters')
+            ->assertViewHas('mapReports', function (array $markers) {
+                return count($markers) === 1;
+            });
+
+        // 3. Selecting a row with valid coordinates opens the triage drawer and dispatches pan-admin-map
+        $component->call('selectReport', $mappedReport->id)
+            ->assertSet('selectedReportId', $mappedReport->id)
+            ->assertSet('drawerOpen', true)
+            ->assertSet('mapCoordWarning', null)
+            ->assertDispatched('pan-admin-map', lat: 14.2816, lng: 121.4146, id: $mappedReport->id);
+
+        // 4. Selecting a row with null coordinates opens the triage drawer and sets a clear warning without crashing
+        $component->call('selectReport', $noCoordsReport->id)
+            ->assertSet('selectedReportId', $noCoordsReport->id)
+            ->assertSet('drawerOpen', true)
+            ->assertSet('mapCoordWarning', 'Report #BRGY-MAP-0002 has no valid GPS coordinates to pin on the map.');
     }
 }

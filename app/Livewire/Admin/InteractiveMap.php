@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\InteractsWithTriageDrawer;
 use App\Models\Report;
 use App\Models\ReportCategory;
 use Livewire\Attributes\Layout;
@@ -10,6 +11,8 @@ use Livewire\Component;
 #[Layout('layouts.admin')]
 class InteractiveMap extends Component
 {
+    use InteractsWithTriageDrawer;
+
     public string $categoryFilter = '';
 
     public string $statusFilter = '';
@@ -20,21 +23,14 @@ class InteractiveMap extends Component
 
     public string $search = '';
 
-    public ?int $selectedReportId = null;
-
-    public function selectReport(int $id)
+    public function clearSelectedReport(): void
     {
-        $this->selectedReportId = $id;
+        $this->closeDrawer();
     }
 
-    public function clearSelectedReport()
+    public function resetFilters(): void
     {
-        $this->selectedReportId = null;
-    }
-
-    public function resetFilters()
-    {
-        $this->reset(['categoryFilter', 'statusFilter', 'priorityFilter', 'barangayFilter', 'search', 'selectedReportId']);
+        $this->reset(['categoryFilter', 'statusFilter', 'priorityFilter', 'barangayFilter', 'search', 'selectedReportId', 'drawerOpen']);
     }
 
     public function render()
@@ -69,27 +65,14 @@ class InteractiveMap extends Component
 
         $reports = $query->orderByDesc('created_at')->get();
 
-        $mapMarkers = $reports->map(function ($r) {
-            return [
-                'id' => $r->id,
-                'ref' => $r->reference_number,
-                'title' => $r->title,
-                'category' => $r->category->name ?? 'Hazard',
-                'status' => $r->status,
-                'status_label' => $r->status_label,
-                'priority' => $r->priority,
-                'lat' => (float) $r->latitude,
-                'lng' => (float) $r->longitude,
-                'address' => $r->address_text,
-                'barangay' => $r->barangay,
-                'submitted_at' => $r->created_at->format('M d, Y'),
-                'image_url' => $r->images->first()?->url ?? null,
-                'url' => route('admin.reports.show', $r->id),
-            ];
-        });
+        $mapMarkers = $this->formatMapMarkers($reports);
 
-        $categories = ReportCategory::where('is_active', true)->get();
-        $selectedReport = $this->selectedReportId ? Report::with(['category', 'images', 'department', 'assignedStaff'])->find($this->selectedReportId) : null;
+        $this->dispatch('sync-admin-map-markers', markers: $mapMarkers);
+
+        $categories = ReportCategory::where('is_active', true)->orderBy('name')->get();
+        $selectedReport = $this->selectedReportId
+            ? Report::with(['category', 'images', 'department', 'assignedStaff'])->find($this->selectedReportId)
+            : null;
 
         return view('livewire.admin.interactive-map', [
             'reports' => $reports,

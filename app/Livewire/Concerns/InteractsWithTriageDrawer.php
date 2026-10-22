@@ -14,6 +14,8 @@ trait InteractsWithTriageDrawer
 {
     public ?int $selectedReportId = null;
 
+    public bool $drawerOpen = false;
+
     public string $drawerStatus = '';
 
     public ?int $drawerDepartmentId = null;
@@ -21,6 +23,8 @@ trait InteractsWithTriageDrawer
     public ?int $drawerStaffId = null;
 
     public string $drawerNote = '';
+
+    public ?string $mapCoordWarning = null;
 
     public function selectReport(int $reportId): void
     {
@@ -30,24 +34,46 @@ trait InteractsWithTriageDrawer
         }
 
         $this->selectedReportId = $report->id;
+        $this->drawerOpen = true;
         $this->drawerStatus = $report->status;
         $this->drawerDepartmentId = $report->department_id;
         $this->drawerStaffId = $report->assigned_to;
         $this->drawerNote = $report->resolution_notes ?? '';
 
-        if ($report->latitude !== null && $report->longitude !== null && is_numeric($report->latitude) && is_numeric($report->longitude)) {
+        if ($this->hasValidCoordinates($report)) {
+            $this->mapCoordWarning = null;
             $this->dispatch(
                 'pan-admin-map',
                 lat: (float) $report->latitude,
                 lng: (float) $report->longitude,
                 id: $report->id
             );
+        } else {
+            $this->mapCoordWarning = "Report #{$report->reference_number} has no valid GPS coordinates to pin on the map.";
         }
     }
 
     public function closeDrawer(): void
     {
+        $this->drawerOpen = false;
         $this->selectedReportId = null;
+        $this->mapCoordWarning = null;
+    }
+
+    public function hasValidCoordinates(Report $report): bool
+    {
+        if ($report->latitude === null || $report->longitude === null) {
+            return false;
+        }
+        if (! is_numeric($report->latitude) || ! is_numeric($report->longitude)) {
+            return false;
+        }
+        $lat = (float) $report->latitude;
+        $lng = (float) $report->longitude;
+
+        return $lat >= -90.0 && $lat <= 90.0
+            && $lng >= -180.0 && $lng <= 180.0
+            && (abs($lat) > 0.001 || abs($lng) > 0.001);
     }
 
     public function saveTriageUpdate(): void
@@ -139,7 +165,7 @@ trait InteractsWithTriageDrawer
     protected function formatMapMarkers($reports): array
     {
         return $reports
-            ->filter(fn (Report $r) => $r->latitude !== null && $r->longitude !== null && is_numeric($r->latitude) && is_numeric($r->longitude))
+            ->filter(fn (Report $r) => $this->hasValidCoordinates($r))
             ->map(function (Report $r) {
                 return [
                     'id' => $r->id,

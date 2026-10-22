@@ -36,13 +36,13 @@
                     @if($selectedReport->barangay) • Brgy. {{ $selectedReport->barangay }} @endif
                     @if($selectedReport->landmark) ({{ $selectedReport->landmark }}) @endif
                 </p>
-                @if($selectedReport->latitude && $selectedReport->longitude)
+                @if($selectedReport->latitude && $selectedReport->longitude && (abs((float) $selectedReport->latitude) > 0.001 || abs((float) $selectedReport->longitude) > 0.001))
                     <p class="text-[10.5px] font-mono text-slate-400">
                         Coords: {{ $selectedReport->latitude }}, {{ $selectedReport->longitude }}
                     </p>
                 @else
-                    <p class="text-[10.5px] text-amber-600 dark:text-amber-400">
-                        No GPS coordinates attached to this report.
+                    <p class="text-[10.5px] text-amber-600 dark:text-amber-400 font-medium">
+                        {{ $this->mapCoordWarning ?? 'No valid GPS coordinates attached to this report.' }}
                     </p>
                 @endif
             </div>
