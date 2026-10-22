@@ -56,7 +56,7 @@
 
                     <div>
                         <label for="barangay" class="block text-xs font-semibold text-slate-700 uppercase">Barangay</label>
-                        <input id="barangay" name="barangay" type="text" value="{{ old('barangay', $user->barangay ?? 'Barangay San Isidro') }}"
+                        <input id="barangay" name="barangay" type="text" value="{{ old('barangay', $user->barangay ?? config('community.barangays.0', 'Poblacion I')) }}"
                             class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-900 focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700">
                     </div>
                 </div>

@@ -4,7 +4,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200 mb-1.5">
-                    Barangay San Isidro Portal
+                    {{ config('community.full_location', 'Santa Cruz, Laguna, Philippines') }} Portal
                 </span>
                 <h1 class="text-xl font-bold tracking-tight text-slate-900">Incident & Hazard Reporting</h1>
                 <p class="text-xs text-slate-600 mt-1 max-w-xl">

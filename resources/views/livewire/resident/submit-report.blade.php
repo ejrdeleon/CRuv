@@ -346,8 +346,8 @@
         const mapContainer = document.getElementById('report-picker-map');
         if (!mapContainer || pickerMap) return;
 
-        const defaultLat = @json($latitude) || 14.1815;
-        const defaultLng = @json($longitude) || 121.2845;
+        const defaultLat = @json($latitude) || 14.2816;
+        const defaultLng = @json($longitude) || 121.4146;
 
         pickerMap = L.map('report-picker-map').setView([defaultLat, defaultLng], 15);
 

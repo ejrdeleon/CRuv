@@ -6,9 +6,9 @@ use App\Models\ActivityLog;
 use App\Models\Notification;
 use App\Models\Report;
 use App\Models\ReportCategory;
-use App\Models\ReportImage;
 use App\Models\ReportStatusHistory;
 use App\Models\User;
+use App\Services\ReportPhotoUploader;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
@@ -33,19 +33,19 @@ class SubmitReport extends Component
     public string $priority = 'medium';
 
     #[Rule('required|numeric|between:-90,90')]
-    public ?float $latitude = 14.1815;
+    public ?float $latitude = 14.2816;
 
     #[Rule('required|numeric|between:-180,180')]
-    public ?float $longitude = 121.2845;
+    public ?float $longitude = 121.4146;
 
     #[Rule('required|string|min:5|max:255')]
     public string $address_text = '';
 
     #[Rule('required|string|max:100')]
-    public string $barangay = 'Barangay San Isidro';
+    public string $barangay = 'Poblacion I';
 
     #[Rule('required|string|max:100')]
-    public string $city = 'Bay';
+    public string $city = 'Santa Cruz';
 
     #[Rule('required|string|max:100')]
     public string $province = 'Laguna';
@@ -175,18 +175,11 @@ class SubmitReport extends Component
             'submitted_at' => now(),
         ]);
 
-        // Upload photos
+        // Upload photos (resized and stored via ReportPhotoUploader)
         if (! empty($this->photos)) {
+            $uploader = app(ReportPhotoUploader::class);
             foreach ($this->photos as $photo) {
-                $path = $photo->store('reports', 'public');
-                ReportImage::create([
-                    'report_id' => $report->id,
-                    'file_path' => $path,
-                    'original_name' => $photo->getClientOriginalName(),
-                    'mime_type' => $photo->getMimeType(),
-                    'file_size' => $photo->getSize(),
-                    'caption' => 'Resident photo attachment',
-                ]);
+                $uploader->storeAndAttach($report, $photo, false, 'Resident photo attachment');
             }
         }
 
@@ -204,7 +197,7 @@ class SubmitReport extends Component
             'user_id' => $user->id,
             'report_id' => $report->id,
             'title' => 'Report Received',
-            'message' => "Your report #{$report->reference_number} ('{$report->title}') has been received by Barangay San Isidro.",
+            'message' => "Your report #{$report->reference_number} ('{$report->title}') has been received by ".config('community.full_location', 'Santa Cruz, Laguna, Philippines').'.',
             'type' => 'report_submitted',
             'is_read' => false,
         ]);

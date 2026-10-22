@@ -1,4 +1,4 @@
-<x-layouts.app title="Resident Registration - Barangay San Isidro">
+<x-layouts.app title="Resident Registration - {{ config('community.municipality', 'Santa Cruz') }}">
     <div class="min-h-screen flex flex-col justify-center py-8 sm:px-6 lg:px-8 bg-slate-50">
         <div class="sm:mx-auto sm:w-full sm:max-w-md text-center px-4">
             <div class="w-9 h-9 rounded-md bg-teal-800 text-white mx-auto flex items-center justify-center font-bold text-sm shadow-xs">
@@ -7,7 +7,7 @@
                 </svg>
             </div>
             <h1 class="mt-2.5 text-lg font-bold tracking-tight text-slate-900">Resident Account Registration</h1>
-            <p class="text-xs text-slate-500 mt-0.5">Barangay San Isidro Incident and Hazard Reporting System</p>
+            <p class="text-xs text-slate-500 mt-0.5">{{ config('community.full_location', 'Santa Cruz, Laguna, Philippines') }} Incident Reporting</p>
         </div>
 
         <div class="mt-4 sm:mx-auto sm:w-full sm:max-w-md px-4">
@@ -49,11 +49,9 @@
                         <label for="barangay" class="block font-semibold text-slate-700 uppercase text-[11px]">Barangay</label>
                         <select id="barangay" name="barangay" required
                             class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-900 focus:border-teal-700 focus:outline-none focus:ring-1 focus:ring-teal-700 bg-white">
-                            <option value="Barangay San Isidro" {{ old('barangay') == 'Barangay San Isidro' ? 'selected' : '' }}>Barangay San Isidro</option>
-                            <option value="Barangay Poblacion" {{ old('barangay') == 'Barangay Poblacion' ? 'selected' : '' }}>Barangay Poblacion</option>
-                            <option value="Barangay San Nicolas" {{ old('barangay') == 'Barangay San Nicolas' ? 'selected' : '' }}>Barangay San Nicolas</option>
-                            <option value="Barangay Maitim" {{ old('barangay') == 'Barangay Maitim' ? 'selected' : '' }}>Barangay Maitim</option>
-                            <option value="Barangay Calo" {{ old('barangay') == 'Barangay Calo' ? 'selected' : '' }}>Barangay Calo</option>
+                            @foreach(config('community.barangays', ['Poblacion I']) as $brgy)
+                                <option value="{{ $brgy }}" {{ old('barangay') == $brgy ? 'selected' : '' }}>{{ $brgy }}</option>
+                            @endforeach
                         </select>
                     </div>
 

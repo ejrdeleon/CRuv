@@ -1,12 +1,51 @@
 @import 'tailwindcss';
 @import 'leaflet/dist/leaflet.css';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../../resources/views/**/*.blade.php';
 @source '../../app/Livewire/**/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Shared Civic Brand & Surface Tokens */
+    --color-brand-primary: #0f766e;
+    --color-brand-primary-dark: #115e59;
+    --color-brand-accent: #14b8a6;
+
+    /* Shared Accessible Status Tokens (Flat, High-Contrast, Non-Neon) */
+    --color-status-low-dot: #db2777;       /* Accessible Soft Pink (Pink-600) */
+    --color-status-low-bg-light: #fdf2f8;
+    --color-status-low-text-light: #9d174d;
+    --color-status-low-bg-dark: #500724;
+    --color-status-low-text-dark: #f9a8d4;
+
+    --color-status-progress-dot: #d97706;  /* Accessible Amber (Amber-600) */
+    --color-status-progress-bg-light: #fffbeb;
+    --color-status-progress-text-light: #92400e;
+    --color-status-progress-bg-dark: #451a03;
+    --color-status-progress-text-dark: #fcd34d;
+
+    --color-status-hazard-dot: #e11d48;    /* Accessible Coral Red (Rose-600) */
+    --color-status-hazard-bg-light: #fff1f2;
+    --color-status-hazard-text-light: #9f1239;
+    --color-status-hazard-bg-dark: #4c0519;
+    --color-status-hazard-text-dark: #fda4af;
+
+    --color-status-resolved-dot: #059669;  /* Accessible Green (Emerald-600) */
+    --color-status-resolved-bg-light: #ecfdf5;
+    --color-status-resolved-text-light: #065f46;
+    --color-status-resolved-bg-dark: #022c22;
+    --color-status-resolved-text-dark: #6ee7b7;
+}
+
+@layer utilities {
+    .tabular-nums-metric {
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.025em;
+    }
 }

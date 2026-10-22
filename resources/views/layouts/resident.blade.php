@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0f766e">
-    <meta name="description" content="Barangay San Isidro Incident and Damage Reporting System">
+    <meta name="description" content="{{ config('community.full_location', 'Santa Cruz, Laguna, Philippines') }} Incident Reporting System">
 
-    <title>{{ $title ?? 'Damage Reporting' }} - Barangay San Isidro</title>
+    <title>{{ $title ?? 'Damage Reporting' }} - {{ config('community.municipality', 'Santa Cruz') }}, {{ config('community.province', 'Laguna') }}</title>
 
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
@@ -31,7 +31,7 @@
                         </svg>
                     </div>
                     <div class="leading-tight">
-                        <span class="block text-xs font-bold text-slate-900 tracking-tight">Barangay San Isidro</span>
+                        <span class="block text-xs font-bold text-slate-900 tracking-tight">{{ config('community.municipality', 'Santa Cruz') }}, {{ config('community.province', 'Laguna') }}</span>
                         <span class="block text-[11px] text-slate-500">Community Incident Reporting</span>
                     </div>
                 </a>

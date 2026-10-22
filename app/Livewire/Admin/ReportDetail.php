@@ -8,9 +8,9 @@ use App\Models\Notification;
 use App\Models\Report;
 use App\Models\ReportAssignment;
 use App\Models\ReportComment;
-use App\Models\ReportImage;
 use App\Models\ReportStatusHistory;
 use App\Models\User;
+use App\Services\ReportPhotoUploader;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -141,18 +141,13 @@ class ReportDetail extends Component
             $this->report->resolved_at = now();
 
             if ($this->resolutionPhoto) {
-                $path = $this->resolutionPhoto->store('reports', 'public');
-                $this->report->resolution_image_path = $path;
-
-                ReportImage::create([
-                    'report_id' => $this->report->id,
-                    'file_path' => $path,
-                    'original_name' => $this->resolutionPhoto->getClientOriginalName(),
-                    'mime_type' => $this->resolutionPhoto->getMimeType(),
-                    'file_size' => $this->resolutionPhoto->getSize(),
-                    'is_resolution_proof' => true,
-                    'caption' => 'Post-resolution completion proof',
-                ]);
+                $image = app(ReportPhotoUploader::class)->storeAndAttach(
+                    $this->report,
+                    $this->resolutionPhoto,
+                    true,
+                    'Post-resolution completion proof'
+                );
+                $this->report->resolution_image_path = $image->file_path;
             }
         }
 

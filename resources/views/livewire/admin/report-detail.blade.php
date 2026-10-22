@@ -217,7 +217,7 @@
                     </div>
                     <div>
                         <span class="text-[10px] uppercase font-semibold text-slate-500 block">Address</span>
-                        <p class="text-slate-600">{{ $report->user->address ?? 'Barangay San Isidro' }}</p>
+                        <p class="text-slate-600 dark:text-slate-400">{{ $report->user->address ?? ($report->barangay . ', ' . config('community.municipality', 'Santa Cruz')) }}</p>
                     </div>
                 </div>
             </div>

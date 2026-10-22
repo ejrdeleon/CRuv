@@ -15,7 +15,7 @@ class AuthWorkflowTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200);
-        $response->assertSee('Barangay San Isidro');
+        $response->assertSee('Santa Cruz, Laguna');
     }
 
     public function test_resident_can_register_and_is_redirected_to_resident_home(): void
@@ -24,7 +24,7 @@ class AuthWorkflowTest extends TestCase
             'name' => 'Test Resident',
             'email' => 'resident.test@example.com',
             'phone' => '0917-123-4567',
-            'barangay' => 'Barangay San Isidro',
+            'barangay' => 'Poblacion I',
             'address' => 'Purok 1',
             'password' => 'secret12345',
             'password_confirmation' => 'secret12345',

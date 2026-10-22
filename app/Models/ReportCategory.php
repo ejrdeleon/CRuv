@@ -16,6 +16,7 @@ class ReportCategory extends Model
         'slug',
         'description',
         'icon',
+        'color',
         'default_priority',
         'department_id',
         'is_hazardous',
