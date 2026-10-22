@@ -10,32 +10,47 @@ class AuthWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_root_url_redirects_to_admin_login(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertRedirect(route('login'));
+    }
+
     public function test_login_page_renders_successfully(): void
     {
         $response = $this->get('/login');
 
         $response->assertStatus(200);
         $response->assertSee('Santa Cruz, Laguna');
+        $response->assertDontSee('Register an account');
     }
 
-    public function test_resident_can_register_and_is_redirected_to_resident_home(): void
+    public function test_web_resident_registration_routes_do_not_exist(): void
     {
-        $response = $this->post('/register', [
-            'name' => 'Test Resident',
-            'email' => 'resident.test@example.com',
-            'phone' => '0917-123-4567',
-            'barangay' => 'Poblacion I',
-            'address' => 'Purok 1',
-            'password' => 'secret12345',
-            'password_confirmation' => 'secret12345',
+        $this->get('/register')->assertStatus(404);
+        $this->post('/register', [])->assertStatus(404);
+    }
+
+    public function test_resident_cannot_login_on_web_and_gets_mobile_app_message(): void
+    {
+        $resident = User::factory()->create([
+            'role' => 'resident',
+            'email' => 'maria.santos@gmail.com',
+            'password' => bcrypt('password123'),
+            'is_active' => true,
         ]);
 
-        $response->assertRedirect(route('resident.home'));
-        $this->assertAuthenticated();
+        $response = $this->from('/login')->post('/login', [
+            'email' => $resident->email,
+            'password' => 'password123',
+        ]);
 
-        $user = User::where('email', 'resident.test@example.com')->first();
-        $this->assertNotNull($user);
-        $this->assertEquals('resident', $user->role);
+        $response->assertRedirect('/login');
+        $response->assertSessionHasErrors([
+            'email' => 'Residents use the mobile app.',
+        ]);
+        $this->assertGuest();
     }
 
     public function test_admin_login_redirects_to_admin_dashboard(): void
@@ -51,6 +66,7 @@ class AuthWorkflowTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
+        $this->assertAuthenticatedAs($admin);
     }
 
     public function test_resident_cannot_access_admin_dashboard_or_reports(): void

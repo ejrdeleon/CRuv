@@ -21,14 +21,14 @@ class ExampleTest extends TestCase
     }
 
     /**
-     * Authenticated resident is redirected to resident home.
+     * Authenticated admin is redirected to admin dashboard.
      */
-    public function test_authenticated_resident_is_redirected_to_home(): void
+    public function test_authenticated_admin_is_redirected_to_admin_dashboard(): void
     {
-        $resident = User::factory()->create(['role' => 'resident']);
+        $admin = User::factory()->create(['role' => 'admin']);
 
-        $response = $this->actingAs($resident)->get('/');
+        $response = $this->actingAs($admin)->get('/');
 
-        $response->assertRedirect(route('resident.home'));
+        $response->assertRedirect(route('admin.dashboard'));
     }
 }

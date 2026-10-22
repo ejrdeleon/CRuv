@@ -16,8 +16,8 @@ class AuthController extends Controller
 {
     public function showLogin(): View|RedirectResponse
     {
-        if (Auth::check()) {
-            return $this->redirectBasedOnRole(Auth::user());
+        if (Auth::check() && in_array(Auth::user()->role, ['admin', 'staff'], true)) {
+            return redirect()->route('admin.dashboard');
         }
 
         return view('auth.login');
@@ -40,6 +40,13 @@ class AuthController extends Controller
             ])->onlyInput('email');
         }
 
+        $candidate = User::where('email', $credentials['email'])->first();
+        if ($candidate && ! in_array($candidate->role, ['admin', 'staff'], true)) {
+            return back()->withErrors([
+                'email' => 'Residents use the mobile app.',
+            ])->onlyInput('email');
+        }
+
         $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
@@ -49,19 +56,29 @@ class AuthController extends Controller
             /** @var User $user */
             $user = Auth::user();
 
+            if (! in_array($user->role, ['admin', 'staff'], true)) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Residents use the mobile app.',
+                ])->onlyInput('email');
+            }
+
             if (! $user->is_active) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
                 return back()->withErrors([
-                    'email' => 'This account has been deactivated. Please contact the barangay administrator.',
-                ]);
+                    'email' => 'This account has been deactivated. Please contact the municipal administrator.',
+                ])->onlyInput('email');
             }
 
             ActivityLog::log('user_login', "User {$user->name} ({$user->role}) logged in.", $user, null, $user);
 
-            return $this->redirectBasedOnRole($user);
+            return redirect()->route('admin.dashboard');
         }
 
         RateLimiter::hit($throttleKey, 60);
@@ -69,45 +86,6 @@ class AuthController extends Controller
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
-    }
-
-    public function showRegister(): View|RedirectResponse
-    {
-        if (Auth::check()) {
-            return $this->redirectBasedOnRole(Auth::user());
-        }
-
-        return view('auth.register');
-    }
-
-    public function register(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'email' => ['required', 'string', 'email', 'max:150', 'unique:users,email'],
-            'phone' => ['required', 'string', 'max:30'],
-            'barangay' => ['required', 'string', 'max:100'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-        ]);
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'],
-            'barangay' => $validated['barangay'],
-            'address' => $validated['address'] ?? null,
-            'password' => Hash::make($validated['password']),
-            'role' => 'resident',
-            'is_active' => true,
-        ]);
-
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        ActivityLog::log('resident_register', "New resident account registered: {$user->name}", $user, null, $user);
-
-        return redirect()->route('resident.home')->with('success', 'Account registered successfully! Welcome to the Community Reporting System.');
     }
 
     public function logout(Request $request): RedirectResponse
@@ -166,14 +144,5 @@ class AuthController extends Controller
         ActivityLog::log('profile_updated', "User {$user->name} updated their profile info.", $user, null, $user);
 
         return back()->with('success', 'Profile updated successfully.');
-    }
-
-    protected function redirectBasedOnRole(User $user): RedirectResponse
-    {
-        if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return redirect()->route('resident.home');
     }
 }
