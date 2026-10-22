@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import 'report_provider.dart';
+import 'widgets/report_photo.dart';
 
 class ReportDetailScreen extends StatefulWidget {
   final int reportId;
@@ -393,46 +394,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                       ...report.images.map((img) {
                                         return Padding(
                                           padding: const EdgeInsets.only(
-                                            bottom: 8,
+                                            bottom: 12,
                                           ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              AppTheme.radiusSm,
-                                            ),
-                                            child: Image.network(
-                                              img.url,
-                                              height: 220,
-                                              width: double.infinity,
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                final isDark = Theme.of(context).brightness == Brightness.dark;
-                                                return Container(
-                                                  height: 140,
-                                                  color: isDark ? AppTheme.slate800 : AppTheme.backgroundLight,
-                                                  alignment: Alignment.center,
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .broken_image_outlined,
-                                                        color: isDark ? AppTheme.slate400 : AppTheme.textSecondary,
-                                                      ),
-                                                      const SizedBox(height: 4),
-                                                      Text(
-                                                        'Image preview unavailable',
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          color: isDark ? AppTheme.slate300 : AppTheme.slate700,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            ),
+                                          child: ReportPhoto.detail(
+                                            image: img,
+                                            maxHeight: 320,
                                           ),
                                         );
                                       }),

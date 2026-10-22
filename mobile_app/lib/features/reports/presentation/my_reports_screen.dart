@@ -6,6 +6,7 @@ import '../domain/report_models.dart';
 import 'report_detail_screen.dart';
 import 'report_form_screen.dart';
 import 'report_provider.dart';
+import 'widgets/report_photo.dart';
 
 class MyReportsScreen extends StatefulWidget {
   const MyReportsScreen({super.key});
@@ -343,18 +344,38 @@ class ReportCardItem extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    report.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    report.addressText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              report.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              report.addressText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (report.images.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        ReportPhoto.thumbnail(
+                          url: report.images.first.url,
+                          thumbnailUrl: report.images.first.thumbnailUrl,
+                          size: 46,
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

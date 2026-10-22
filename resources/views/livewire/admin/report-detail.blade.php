@@ -98,15 +98,13 @@
             <!-- Photos Card -->
             @if($report->images->isNotEmpty())
                 <div class="bg-white dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Photographic Evidence ({{ $report->images->count() }})</h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Photographic Evidence ({{ $report->images->count() }})</h2>
+                        <span class="text-[11px] text-slate-400">Click photo to enlarge</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         @foreach($report->images as $img)
-                            <div class="relative aspect-video rounded-md overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 group">
-                                <img src="{{ $img->url }}" class="w-full h-full object-cover" alt="Evidence photo">
-                                <div class="absolute bottom-0 inset-x-0 p-1.5 bg-slate-900/80 text-[10px] text-white">
-                                    {{ $img->is_resolution_proof ? 'Resolution Proof' : ($img->caption ?? 'Attachment') }}
-                                </div>
-                            </div>
+                            <x-report-photo :image="$img" size="detail" />
                         @endforeach
                     </div>
                 </div>

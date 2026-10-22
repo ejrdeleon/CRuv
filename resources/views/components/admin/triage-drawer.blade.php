@@ -50,12 +50,13 @@
             <!-- Resident Photos -->
             @if($selectedReport->images->isNotEmpty())
                 <div class="space-y-1.5">
-                    <h4 class="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">Resident Photo Evidence</h4>
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">Resident Photo Evidence ({{ $selectedReport->images->count() }})</h4>
+                        <span class="text-[10px] text-slate-400">Click to zoom</span>
+                    </div>
                     <div class="grid grid-cols-2 gap-2">
                         @foreach($selectedReport->images as $img)
-                            <a href="{{ $img->url }}" target="_blank" class="block rounded-md overflow-hidden border border-slate-200 dark:border-slate-800">
-                                <img src="{{ $img->url }}" alt="Report photo" class="w-full h-28 object-cover">
-                            </a>
+                            <x-report-photo :image="$img" size="drawer" />
                         @endforeach
                     </div>
                 </div>

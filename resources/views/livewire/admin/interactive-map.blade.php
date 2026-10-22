@@ -69,9 +69,7 @@
                     </div>
 
                     @if($selectedReport->images->first())
-                        <div class="aspect-video rounded-md overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
-                            <img src="{{ $selectedReport->images->first()->url }}" class="w-full h-full object-cover" alt="{{ $selectedReport->title }}">
-                        </div>
+                        <x-report-photo :image="$selectedReport->images->first()" size="preview" />
                     @endif
 
                     <div class="space-y-0.5">

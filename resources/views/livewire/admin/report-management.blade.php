@@ -171,14 +171,21 @@
                                                 {{ $report->reference_number }}
                                             </a>
                                         </td>
-                                        <td class="py-2.5 px-3 max-w-[220px]">
-                                            <p class="font-semibold text-slate-900 dark:text-white truncate">{{ $report->title }}</p>
-                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                                                {{ $report->address_text }}
-                                                @if(!$hasCoords)
-                                                    <span class="text-amber-600 dark:text-amber-400 font-semibold">(No GPS)</span>
+                                        <td class="py-2.5 px-3 max-w-[240px]">
+                                            <div class="flex items-center gap-2.5">
+                                                @if($report->images->isNotEmpty())
+                                                    <x-report-photo :image="$report->images->first()" size="thumb" />
                                                 @endif
-                                            </p>
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="font-semibold text-slate-900 dark:text-white truncate">{{ $report->title }}</p>
+                                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                                        {{ $report->address_text }}
+                                                        @if(!$hasCoords)
+                                                            <span class="text-amber-600 dark:text-amber-400 font-semibold">(No GPS)</span>
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td class="py-2.5 px-3 text-slate-700 dark:text-slate-300 max-w-[140px] truncate">
                                             {{ $report->category->name }}

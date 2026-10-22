@@ -254,6 +254,104 @@
         </div>
     </div>
 
+    <!-- Global Full-Resolution Photo Lightbox Modal -->
+    <div
+        x-data="{
+            isOpen: false,
+            url: '',
+            caption: '',
+            alt: '',
+            isZoomed: false,
+            open(detail) {
+                this.url = detail.url || '';
+                this.caption = detail.caption || '';
+                this.alt = detail.alt || 'Evidence photo';
+                this.isZoomed = false;
+                this.isOpen = true;
+                document.body.classList.add('overflow-hidden');
+            },
+            close() {
+                this.isOpen = false;
+                this.isZoomed = false;
+                this.url = '';
+                document.body.classList.remove('overflow-hidden');
+            },
+            toggleZoom() {
+                this.isZoomed = !this.isZoomed;
+            }
+        }"
+        @open-lightbox.window="open($event.detail)"
+        @keydown.escape.window="if (isOpen) close()"
+        x-show="isOpen"
+        x-cloak
+        style="display: none;"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/92 backdrop-blur-xs select-none"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Photo evidence lightbox"
+    >
+        <!-- Backdrop click target -->
+        <div class="absolute inset-0" @click="close()"></div>
+
+        <!-- Top Control Bar -->
+        <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
+            <button
+                type="button"
+                @click="toggleZoom()"
+                class="px-2.5 py-1.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-medium border border-slate-700 shadow-sm transition inline-flex items-center gap-1.5"
+                :title="isZoomed ? 'Reset zoom' : 'Zoom 2x'"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                </svg>
+                <span x-text="isZoomed ? '1x View' : '2x Zoom'"></span>
+            </button>
+
+            <a
+                :href="url"
+                target="_blank"
+                class="px-2.5 py-1.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-medium border border-slate-700 shadow-sm transition inline-flex items-center gap-1.5"
+                title="Open original file in new tab"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                <span>Original</span>
+            </a>
+
+            <button
+                type="button"
+                @click="close()"
+                class="p-1.5 rounded-md bg-slate-800/90 hover:bg-rose-900/90 text-slate-200 hover:text-white border border-slate-700 shadow-sm transition"
+                title="Close lightbox (Esc)"
+                aria-label="Close"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Lightbox Content Container -->
+        <div
+            class="relative z-1 max-w-full max-h-full flex flex-col items-center justify-center p-2"
+            :class="isZoomed ? 'overflow-auto max-h-[92vh] max-w-[94vw]' : ''"
+            @click.stop
+        >
+            <img
+                :src="url"
+                :alt="alt"
+                class="object-contain transition-all duration-200 rounded select-none cursor-pointer"
+                :class="isZoomed ? 'max-w-none max-h-none w-[180%] h-auto' : 'max-h-[82vh] max-w-[88vw] w-auto h-auto'"
+                @click="toggleZoom()"
+            >
+
+            <div x-show="caption" class="mt-2.5 px-3 py-1.5 rounded bg-slate-900/80 border border-slate-800 text-xs text-slate-300 text-center max-w-xl">
+                <p x-text="caption"></p>
+            </div>
+        </div>
+    </div>
+
     @livewireScripts
     @stack('scripts')
 </body>

@@ -39,12 +39,18 @@ class CategoryModel {
 class ReportImageModel {
   final int id;
   final String url;
+  final String? thumbnailUrl;
+  final int? width;
+  final int? height;
   final String? caption;
   final String type;
 
   const ReportImageModel({
     required this.id,
     required this.url,
+    this.thumbnailUrl,
+    this.width,
+    this.height,
     this.caption,
     this.type = 'evidence',
   });
@@ -53,6 +59,9 @@ class ReportImageModel {
     return ReportImageModel(
       id: (json['id'] as num).toInt(),
       url: json['url'] as String? ?? '',
+      thumbnailUrl: json['thumbnail_url'] as String?,
+      width: (json['width'] as num?)?.toInt(),
+      height: (json['height'] as num?)?.toInt(),
       caption: json['caption'] as String?,
       type: json['type'] as String? ?? 'evidence',
     );

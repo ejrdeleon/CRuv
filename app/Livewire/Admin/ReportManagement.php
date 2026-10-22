@@ -76,7 +76,7 @@ class ReportManagement extends Component
 
     public function render()
     {
-        $query = Report::with(['category', 'user', 'department', 'assignedStaff']);
+        $query = Report::with(['category', 'user', 'department', 'assignedStaff', 'images']);
 
         if (! empty($this->search)) {
             $query->where(function ($q) {
