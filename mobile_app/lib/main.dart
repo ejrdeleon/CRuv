@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/network/api_client.dart';
 import 'core/theme/app_theme.dart';
@@ -12,6 +13,11 @@ import 'features/reports/presentation/report_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Lock orientation to portrait-only to ensure consistent layout and UX
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
 
   final apiClient = ApiClient();
   await apiClient.loadCustomBaseUrl();
