@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../auth/presentation/auth_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -188,6 +189,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                     ],
                                   ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spacingMd),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppTheme.spacingMd),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.palette_outlined, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Theme & Appearance',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Choose how the application appears to you.',
+                                  style:
+                                      Theme.of(context).textTheme.bodySmall,
+                                ),
+                                const SizedBox(height: AppTheme.spacingMd),
+                                Consumer<ThemeProvider>(
+                                  builder: (context, themeProvider, _) {
+                                    final current = themeProvider.themeMode;
+                                    return SizedBox(
+                                      width: double.infinity,
+                                      child: SegmentedButton<ThemeMode>(
+                                        segments: const [
+                                          ButtonSegment(
+                                            value: ThemeMode.system,
+                                            icon: Icon(Icons.brightness_auto,
+                                                size: 16),
+                                            label: Text('System'),
+                                          ),
+                                          ButtonSegment(
+                                            value: ThemeMode.light,
+                                            icon: Icon(Icons.light_mode,
+                                                size: 16),
+                                            label: Text('Light'),
+                                          ),
+                                          ButtonSegment(
+                                            value: ThemeMode.dark,
+                                            icon: Icon(Icons.dark_mode,
+                                                size: 16),
+                                            label: Text('Dark'),
+                                          ),
+                                        ],
+                                        selected: {current},
+                                        onSelectionChanged: (newSelection) {
+                                          if (newSelection.isNotEmpty) {
+                                            themeProvider.setThemeMode(
+                                                newSelection.first);
+                                          }
+                                        },
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),

@@ -460,7 +460,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                             children: [
                                               TileLayer(
                                                 urlTemplate:
-                                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                    Theme.of(context).brightness == Brightness.dark ? 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                                 userAgentPackageName:
                                                     'ph.gov.barangay.community_report_app',
                                               ),
