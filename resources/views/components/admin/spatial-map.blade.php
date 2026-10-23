@@ -7,6 +7,10 @@
     'showExpandLink' => true,
 ])
 
+@pushOnce('scripts')
+    @vite('resources/js/map.js')
+@endpushOnce
+
 <div
     class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-3.5 space-y-2.5"
     x-data="{

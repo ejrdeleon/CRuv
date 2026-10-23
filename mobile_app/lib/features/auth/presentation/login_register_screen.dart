@@ -466,8 +466,13 @@ class _ModeTabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Material(
-      color: selected ? Colors.white : Colors.transparent,
+      color: selected
+          ? (isDark ? AppTheme.slate800 : Colors.white)
+          : Colors.transparent,
       borderRadius: BorderRadius.circular(6),
       child: InkWell(
         onTap: onTap,
@@ -480,8 +485,8 @@ class _ModeTabButton extends StatelessWidget {
             style: TextStyle(
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               color: selected
-                  ? AppTheme.textPrimary
-                  : AppTheme.textSecondary,
+                  ? (isDark ? AppTheme.slate100 : AppTheme.slate900)
+                  : (isDark ? AppTheme.slate400 : AppTheme.slate600),
               fontSize: 14,
             ),
           ),

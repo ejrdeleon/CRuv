@@ -141,30 +141,32 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               SizedBox(
                                 height: 210,
-                                child: Stack(
-                                  children: [
-                                    FlutterMap(
-                                      options: MapOptions(
-                                        initialCenter: mapCenter,
-                                        initialZoom: 14.8,
-                                        onTap: (_, _) {
-                                          if (_selectedPin != null) {
-                                            setState(() {
-                                              _selectedPin = null;
-                                            });
-                                          }
-                                        },
-                                      ),
-                                      children: [
-                                        TileLayer(
-                                          urlTemplate:
-                                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                          userAgentPackageName:
-                                              'ph.gov.barangay.community_report_app',
+                                child: RepaintBoundary(
+                                  child: Stack(
+                                    children: [
+                                      FlutterMap(
+                                        options: MapOptions(
+                                          initialCenter: mapCenter,
+                                          initialZoom: 14.8,
+                                          onTap: (_, _) {
+                                            if (_selectedPin != null) {
+                                              setState(() {
+                                                _selectedPin = null;
+                                              });
+                                            }
+                                          },
                                         ),
-                                        MarkerLayer(
-                                          markers: pins.map((pin) {
-                                            final token =
+                                        children: [
+                                          TileLayer(
+                                            urlTemplate: isDark
+                                                ? 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+                                                : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                            userAgentPackageName:
+                                                'ph.gov.barangay.community_report_app',
+                                          ),
+                                          MarkerLayer(
+                                            markers: pins.take(50).map((pin) {
+                                              final token =
                                                 AppTheme.resolveStatusToken(
                                               status: pin.status,
                                               priority: pin.priority,
@@ -283,6 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                               ),
+                            ),
                               // Map Status Token Legend
                               Padding(
                                 padding: const EdgeInsets.symmetric(

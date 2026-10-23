@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/report_models.dart';
@@ -114,26 +115,19 @@ class ReportPhoto extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: Image.network(
-            thumbnailUrl ?? url,
+          child: CachedNetworkImage(
+            imageUrl: thumbnailUrl ?? url,
             fit: BoxFit.contain,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                        : null,
-                  ),
-                ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) => Center(
+            memCacheWidth: (fixedWidth! * 2).toInt(),
+            memCacheHeight: (fixedHeight! * 2).toInt(),
+            placeholder: (context, url) => const Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+            errorWidget: (context, url, error) => Center(
               child: Icon(
                 Icons.broken_image_outlined,
                 size: 20,
@@ -151,25 +145,17 @@ class ReportPhoto extends StatelessWidget {
       aspectRatio = width! / height!;
     }
 
-    Widget imageWidget = Image.network(
-      url,
+    Widget imageWidget = CachedNetworkImage(
+      imageUrl: url,
       fit: BoxFit.contain,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacingLg),
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                      loadingProgress.expectedTotalBytes!
-                  : null,
-            ),
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) => Container(
+      memCacheWidth: 1080,
+      placeholder: (context, url) => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(AppTheme.spacingLg),
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      errorWidget: (context, url, error) => Container(
         height: 160,
         alignment: Alignment.center,
         color: neutralBg,
@@ -319,23 +305,16 @@ class _FullScreenImageViewer extends StatelessWidget {
               child: InteractiveViewer(
                 minScale: 0.8,
                 maxScale: 5.0,
-                child: Image.network(
-                  url,
+                child: CachedNetworkImage(
+                  imageUrl: url,
                   fit: BoxFit.contain,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                        value: progress.expectedTotalBytes != null
-                            ? progress.cumulativeBytesLoaded /
-                                progress.expectedTotalBytes!
-                            : null,
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) => const Center(
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => const Center(
                     child: Text(
                       'Failed to load high-resolution image',
                       style: TextStyle(color: Colors.white70),

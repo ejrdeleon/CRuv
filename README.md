@@ -151,6 +151,54 @@ php artisan make:admin --name="Admin Name" --email="admin2@barangay.gov.ph" --pa
 
 ---
 
+## 🚀 Production Deployment Checklist
+
+When deploying to a staging or production server, execute these commands to enable class-map autoloader optimization, warm route/config/view caches, and run pending migrations:
+
+```bash
+# 1. Install PHP dependencies with optimized autoloader (skip dev packages)
+composer install --optimize-autoloader --no-dev
+
+# 2. Run pending database migrations
+php artisan migrate --force
+
+# 3. Cache configuration, routes, Blade templates, and events
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+# 4. Build minified frontend assets
+npm ci
+npm run build
+
+# 5. Create storage symlink if not already linked
+php artisan storage:link
+
+# 6. Restart queue worker (if running asynchronous background jobs)
+php artisan queue:restart
+```
+
+### Server-Level Gzip / Brotli & Static Caching (Nginx Example)
+Ensure Nginx or Apache has gzip/brotli and long-lived client caching enabled for static assets and photo thumbnails:
+```nginx
+# Nginx Gzip configuration
+gzip on;
+gzip_comp_level 5;
+gzip_min_length 256;
+gzip_proxied any;
+gzip_types application/javascript application/json application/xml image/svg+xml text/css text/plain text/xml;
+
+# Static asset and evidence thumbnail caching
+location ~* \.(ico|jpg|jpeg|png|gif|webp|svg|woff2?|css|js)$ {
+    expires 1y;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+    access_log off;
+}
+```
+
+---
+
 ## 🧪 Automated Testing
 
 Execute the PHPUnit feature test suite covering authorization gates, policies, role access controls, resident submission flows, status workflows, and duplicate handling:

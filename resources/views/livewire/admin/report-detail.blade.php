@@ -399,12 +399,17 @@
 </div>
 
 @push('scripts')
+@vite('resources/js/map.js')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         initAdminDetailMap();
     });
 
     document.addEventListener('livewire:navigated', function() {
+        initAdminDetailMap();
+    });
+
+    window.addEventListener('civic-map-ready', function() {
         initAdminDetailMap();
     });
 

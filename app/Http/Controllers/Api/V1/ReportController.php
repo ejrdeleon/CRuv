@@ -16,6 +16,8 @@ use App\Services\ReportPhotoUploader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class ReportController extends Controller
@@ -27,13 +29,22 @@ class ReportController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        // 1. Eager load only needed relationships with selected columns (prevents N+1 and minimizes memory)
         $query = Report::with([
-            'category.department',
-            'department',
-            'assignedStaff',
+            'category:id,name,slug,description,is_hazardous',
+            'department:id,name,code',
+            'assignedStaff:id,name',
             'images',
-            'publicComments.user',
-        ])->where('user_id', $user->id);
+        ])
+            ->select([
+                'id', 'reference_number', 'user_id', 'category_id', 'department_id',
+                'assigned_to', 'title', 'description', 'priority', 'status',
+                'rejection_reason', 'resolution_notes', 'latitude', 'longitude',
+                'address_text', 'barangay', 'city', 'province', 'landmark',
+                'is_hazard_warning_acknowledged', 'submitted_at', 'verified_at',
+                'assigned_at', 'in_progress_at', 'resolved_at', 'created_at',
+            ])
+            ->where('user_id', $user->id);
 
         $statusFilter = $request->string('status')->trim()->toString();
         if ($statusFilter !== '' && $statusFilter !== 'all') {
@@ -54,48 +65,67 @@ class ReportController extends Controller
             });
         }
 
-        $reports = $query->orderByDesc('created_at')->get();
+        // 2. Paginate: never load unbounded rows into memory
+        $perPage = min(50, max(5, $request->integer('per_page', 20)));
+        $reports = $query->orderByDesc('created_at')->paginate($perPage);
 
-        $totalCount = $user->reports()->count();
-        $activeCount = $user->reports()
-            ->whereIn('status', ['submitted', 'under_review', 'verified', 'assigned', 'in_progress'])
-            ->count();
-        $resolvedCount = $user->reports()->where('status', 'resolved')->count();
+        // 3. Consolidated single-query aggregation for user statistics (1 query instead of 3 count queries)
+        $stats = DB::table('reports')
+            ->where('user_id', $user->id)
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status IN ('submitted', 'under_review', 'verified', 'assigned', 'in_progress') THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved
+            ")->first();
 
-        // Nearby community pins for the Citizen Bento Map + active safety alerts
-        $communityPins = Report::with('category')
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude')
-            ->whereNotIn('status', ['rejected', 'duplicate'])
-            ->orderByDesc('created_at')
-            ->take(40)
-            ->get()
-            ->map(fn (Report $r) => [
-                'id' => $r->id,
-                'reference_number' => $r->reference_number,
-                'title' => $r->title,
-                'category_name' => $r->category?->name ?? 'Community Issue',
-                'status' => $r->status,
-                'status_label' => $r->status_label,
-                'priority' => $r->priority,
-                'latitude' => (float) $r->latitude,
-                'longitude' => (float) $r->longitude,
-                'address_text' => $r->address_text,
-                'is_hazardous' => (bool) ($r->category?->is_hazardous ?? false),
-            ]);
+        // 4. Cached community map pins with 60s TTL (lightweight marker attributes only)
+        $communityPins = Cache::remember('api:community_pins', 60, function () {
+            return Report::with('category:id,name,is_hazardous')
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->whereNotIn('status', ['rejected', 'duplicate'])
+                ->select(['id', 'reference_number', 'title', 'category_id', 'status', 'priority', 'latitude', 'longitude', 'address_text'])
+                ->orderByDesc('created_at')
+                ->take(40)
+                ->get()
+                ->map(fn (Report $r) => [
+                    'id' => $r->id,
+                    'reference_number' => $r->reference_number,
+                    'title' => $r->title,
+                    'category_name' => $r->category?->name ?? 'Community Issue',
+                    'status' => $r->status,
+                    'status_label' => $r->status_label,
+                    'priority' => $r->priority,
+                    'latitude' => (float) $r->latitude,
+                    'longitude' => (float) $r->longitude,
+                    'address_text' => $r->address_text,
+                    'is_hazardous' => (bool) ($r->category?->is_hazardous ?? false),
+                ])
+                ->values()
+                ->all();
+        });
 
-        $safetyAlertsCount = Report::whereIn('priority', ['urgent', 'high'])
-            ->whereNotIn('status', ['resolved', 'rejected', 'duplicate'])
-            ->count();
+        // 5. Cached active safety alert count (60s TTL)
+        $safetyAlertsCount = Cache::remember('api:safety_alerts_count', 60, function () {
+            return Report::whereIn('priority', ['urgent', 'high'])
+                ->whereNotIn('status', ['resolved', 'rejected', 'duplicate'])
+                ->count();
+        });
 
         return response()->json([
             'data' => ReportResource::collection($reports),
             'meta' => [
                 'stats' => [
-                    'total' => $totalCount,
-                    'active' => $activeCount,
-                    'resolved' => $resolvedCount,
+                    'total' => (int) ($stats->total ?? 0),
+                    'active' => (int) ($stats->active ?? 0),
+                    'resolved' => (int) ($stats->resolved ?? 0),
                     'safety_alerts' => $safetyAlertsCount,
+                ],
+                'pagination' => [
+                    'current_page' => $reports->currentPage(),
+                    'last_page' => $reports->lastPage(),
+                    'per_page' => $reports->perPage(),
+                    'total' => $reports->total(),
                 ],
                 'community_pins' => $communityPins,
             ],
@@ -167,6 +197,11 @@ class ReportController extends Controller
             'type' => 'report_submitted',
             'is_read' => false,
         ]);
+
+        // Invalidate cached aggregates so dashboards and maps refresh instantly
+        Cache::forget('api:community_pins');
+        Cache::forget('api:safety_alerts_count');
+        Cache::forget('admin:dashboard:metrics');
 
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $adminUser) {

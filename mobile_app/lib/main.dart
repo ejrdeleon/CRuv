@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/network/api_client.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/auth_provider.dart';
 import 'features/auth/presentation/login_register_screen.dart';
@@ -19,6 +20,9 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
+  // Load saved ThemeMode before first frame to prevent bright flash in dark mode
+  final initialThemeMode = await ThemeProvider.loadSavedThemeMode();
+
   final apiClient = ApiClient();
   await apiClient.loadCustomBaseUrl();
 
@@ -29,6 +33,9 @@ void main() async {
     MultiProvider(
       providers: [
         Provider<ApiClient>.value(value: apiClient),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(initialThemeMode: initialThemeMode),
+        ),
         ChangeNotifierProvider(
           create: (_) => AuthProvider(authRepository)..initializeSession(),
         ),
@@ -46,12 +53,14 @@ class CommunityReportApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = context.watch<ThemeProvider>().themeMode;
+
     return MaterialApp(
       title: 'Community Report App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: themeMode,
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (auth.isInitializing) {

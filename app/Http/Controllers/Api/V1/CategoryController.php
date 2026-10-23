@@ -11,7 +11,7 @@ class CategoryController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $categories = ReportCategory::with('department')
+        $categories = ReportCategory::with('department:id,name,code')
             ->where('is_active', true)
             ->orderBy('id')
             ->get();
