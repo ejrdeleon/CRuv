@@ -148,6 +148,7 @@ class ReportModel {
   final String? rejectionReason;
   final CategoryModel? category;
   final String? assignedToName;
+  final String? assignedUnitName;
   final List<ReportImageModel> images;
   final List<StatusHistoryModel> statusHistories;
   final List<CommentModel> publicComments;
@@ -173,6 +174,7 @@ class ReportModel {
     this.rejectionReason,
     this.category,
     this.assignedToName,
+    this.assignedUnitName,
     this.images = const [],
     this.statusHistories = const [],
     this.publicComments = const [],
@@ -208,6 +210,8 @@ class ReportModel {
           : null,
       assignedToName: (json['assigned_to_name'] ??
           json['assigned_staff_name']) as String?,
+      assignedUnitName: (json['assigned_unit_name'] ??
+          json['department_name']) as String?,
       images: imagesJson
           .map((e) => ReportImageModel.fromJson(e as Map<String, dynamic>))
           .toList(),

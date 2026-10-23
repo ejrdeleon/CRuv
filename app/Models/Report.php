@@ -16,6 +16,7 @@ class Report extends Model
         'user_id',
         'category_id',
         'department_id',
+        'personnel_id',
         'assigned_to',
         'duplicate_of_id',
         'title',
@@ -84,6 +85,11 @@ class Report extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    public function personnel(): BelongsTo
+    {
+        return $this->belongsTo(Personnel::class, 'personnel_id');
     }
 
     public function assignedStaff(): BelongsTo

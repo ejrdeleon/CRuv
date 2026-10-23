@@ -76,7 +76,7 @@ class InteractiveMap extends Component
 
         $categories = ReportCategory::where('is_active', true)->orderBy('name')->get();
         $selectedReport = $this->selectedReportId
-            ? Report::with(['category', 'images', 'department', 'assignedStaff'])->find($this->selectedReportId)
+            ? Report::with(['category', 'images', 'department', 'personnel'])->find($this->selectedReportId)
             : null;
 
         return view('livewire.admin.interactive-map', [

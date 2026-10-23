@@ -3,7 +3,9 @@
 namespace App\Livewire\Concerns;
 
 use App\Models\ActivityLog;
+use App\Models\Department;
 use App\Models\Notification;
+use App\Models\Personnel;
 use App\Models\Report;
 use App\Models\ReportAssignment;
 use App\Models\ReportStatusHistory;
@@ -21,6 +23,8 @@ trait InteractsWithTriageDrawer
 
     public ?int $drawerDepartmentId = null;
 
+    public ?int $drawerPersonnelId = null;
+
     public ?int $drawerStaffId = null;
 
     public string $drawerNote = '';
@@ -29,7 +33,7 @@ trait InteractsWithTriageDrawer
 
     public function selectReport(int $reportId): void
     {
-        $report = Report::find($reportId);
+        $report = Report::with(['category', 'department', 'personnel'])->find($reportId);
         if (! $report) {
             return;
         }
@@ -37,7 +41,9 @@ trait InteractsWithTriageDrawer
         $this->selectedReportId = $report->id;
         $this->drawerOpen = true;
         $this->drawerStatus = $report->status;
-        $this->drawerDepartmentId = $report->department_id;
+        // Suggest likely unit from report category default if not yet assigned
+        $this->drawerDepartmentId = $report->department_id ?: $report->category?->department_id;
+        $this->drawerPersonnelId = $report->personnel_id;
         $this->drawerStaffId = $report->assigned_to;
         $this->drawerNote = $report->resolution_notes ?? '';
 
@@ -51,6 +57,20 @@ trait InteractsWithTriageDrawer
             );
         } else {
             $this->mapCoordWarning = "Report #{$report->reference_number} has no valid GPS coordinates to pin on the map.";
+        }
+    }
+
+    public function updatedDrawerDepartmentId(): void
+    {
+        if ($this->drawerPersonnelId) {
+            $belongs = Personnel::where('id', $this->drawerPersonnelId)
+                ->where('department_id', $this->drawerDepartmentId)
+                ->where('is_active', true)
+                ->exists();
+
+            if (! $belongs) {
+                $this->drawerPersonnelId = null;
+            }
         }
     }
 
@@ -92,9 +112,12 @@ trait InteractsWithTriageDrawer
         $newStatus = $this->drawerStatus ?: $oldStatus;
 
         $report->department_id = $this->drawerDepartmentId ?: null;
-        $report->assigned_to = $this->drawerStaffId ?: null;
+        $report->personnel_id = $this->drawerPersonnelId ?: null;
+        if ($this->drawerStaffId) {
+            $report->assigned_to = $this->drawerStaffId;
+        }
 
-        if ($this->drawerStaffId && in_array($newStatus, ['submitted', 'under_review', 'verified'], true)) {
+        if (($this->drawerDepartmentId || $this->drawerPersonnelId || $this->drawerStaffId) && in_array($newStatus, ['submitted', 'under_review', 'verified'], true)) {
             $newStatus = 'assigned';
             $this->drawerStatus = 'assigned';
         }
@@ -118,18 +141,32 @@ trait InteractsWithTriageDrawer
         $report->status = $newStatus;
         $report->save();
 
-        if ($this->drawerDepartmentId || $this->drawerStaffId) {
+        if ($this->drawerDepartmentId || $this->drawerPersonnelId || $this->drawerStaffId) {
+            $dept = $this->drawerDepartmentId ? Department::find($this->drawerDepartmentId) : null;
+            $person = $this->drawerPersonnelId ? Personnel::find($this->drawerPersonnelId) : null;
+            $assigneeText = $dept ? $dept->name : '';
+            if ($person) {
+                $assigneeText = $assigneeText ? "{$assigneeText}, {$person->name}" : $person->name;
+            }
+
             ReportAssignment::create([
                 'report_id' => $report->id,
                 'department_id' => $this->drawerDepartmentId,
+                'personnel_id' => $this->drawerPersonnelId,
                 'assigned_by_user_id' => Auth::id(),
                 'assigned_to_user_id' => $this->drawerStaffId,
-                'assignment_notes' => trim($this->drawerNote) ?: 'Updated via Triage Drawer',
+                'assignment_notes' => trim($this->drawerNote) ?: "Assigned to {$assigneeText}",
                 'assigned_at' => now(),
             ]);
-        }
 
-        if ($oldStatus !== $newStatus || trim($this->drawerNote) !== '') {
+            ReportStatusHistory::create([
+                'report_id' => $report->id,
+                'user_id' => Auth::id(),
+                'from_status' => $oldStatus,
+                'to_status' => $newStatus,
+                'comment' => "Assigned to {$assigneeText}".(trim($this->drawerNote) ? ' — '.trim($this->drawerNote) : ''),
+            ]);
+        } elseif ($oldStatus !== $newStatus || trim($this->drawerNote) !== '') {
             ReportStatusHistory::create([
                 'report_id' => $report->id,
                 'user_id' => Auth::id(),
@@ -137,16 +174,16 @@ trait InteractsWithTriageDrawer
                 'to_status' => $newStatus,
                 'comment' => trim($this->drawerNote) ?: "Status updated to {$report->status_label}",
             ]);
-
-            Notification::create([
-                'user_id' => $report->user_id,
-                'report_id' => $report->id,
-                'title' => "Report Status Updated: {$report->status_label}",
-                'message' => "Your report #{$report->reference_number} is now {$report->status_label}.",
-                'type' => 'status_updated',
-                'is_read' => false,
-            ]);
         }
+
+        Notification::create([
+            'user_id' => $report->user_id,
+            'report_id' => $report->id,
+            'title' => "Report Status Updated: {$report->status_label}",
+            'message' => "Your report #{$report->reference_number} is now {$report->status_label}.",
+            'type' => 'status_updated',
+            'is_read' => false,
+        ]);
 
         ActivityLog::log(
             'triage_updated',

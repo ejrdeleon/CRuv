@@ -47,11 +47,11 @@
     @click.window="contextMenu.open = false"
 >
     <!-- Top Compact Stat Row: Real Operational Metrics -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Total Active Tickets -->
         <div class="bg-white dark:bg-slate-900 rounded-lg p-3.5 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div>
-                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Active Tickets</span>
+                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Queue</span>
                 <div class="mt-1 flex items-baseline gap-2">
                     <span class="text-2xl font-extrabold text-slate-900 dark:text-white tabular-nums-metric">{{ $totalActiveTickets }}</span>
                     <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ $newReports }} new • {{ $inProgressReports }} in progress</span>
@@ -59,39 +59,54 @@
             </div>
             <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-semibold bg-[var(--color-status-progress-bg-light)] text-[var(--color-status-progress-text-light)] dark:bg-[var(--color-status-progress-bg-dark)] dark:text-[var(--color-status-progress-text-dark)]">
                 <span class="w-2 h-2 rounded-full bg-[var(--color-status-progress-dot)]"></span>
-                Active Queue
+                Active
+            </span>
+        </div>
+
+        <!-- Unassigned Reports -->
+        <a href="{{ route('admin.reports', ['assignment' => 'unassigned']) }}" class="bg-white dark:bg-slate-900 rounded-lg p-3.5 border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-600 transition flex items-center justify-between group">
+            <div>
+                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider group-hover:text-amber-700 dark:group-hover:text-amber-400">Unassigned Cases</span>
+                <div class="mt-1 flex items-baseline gap-2">
+                    <span class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 tabular-nums-metric">{{ $unassignedCount }}</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">Needs Unit Routing</span>
+                </div>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                Triage
+            </span>
+        </a>
+
+        <!-- High Priority Unassigned / Urgent -->
+        <div class="bg-white dark:bg-slate-900 rounded-lg p-3.5 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Critical Hazards</span>
+                <div class="mt-1 flex items-baseline gap-2">
+                    <span class="text-2xl font-extrabold text-rose-600 dark:text-rose-400 tabular-nums-metric">{{ $urgentReports }}</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ $highPriorityUnassigned }} unassigned</span>
+                </div>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-semibold bg-[var(--color-status-hazard-bg-light)] text-[var(--color-status-hazard-text-light)] dark:bg-[var(--color-status-hazard-bg-dark)] dark:text-[var(--color-status-hazard-text-dark)]">
+                <span class="w-2 h-2 rounded-full bg-[var(--color-status-hazard-dot)]"></span>
+                Hazard
             </span>
         </div>
 
         <!-- Average Resolution Time -->
         <div class="bg-white dark:bg-slate-900 rounded-lg p-3.5 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div>
-                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Average Resolution Time</span>
+                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg Resolution</span>
                 <div class="mt-1 flex items-baseline gap-2">
                     <span class="text-2xl font-extrabold text-slate-900 dark:text-white tabular-nums-metric">
-                        {{ $avgResolutionHours !== null ? $avgResolutionHours . ' hrs' : 'N/A' }}
+                        {{ $avgResolutionHours !== null ? $avgResolutionHours . 'h' : '—' }}
                     </span>
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ $resolvedReports }} resolved cases</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ $resolvedReports }} resolved</span>
                 </div>
             </div>
             <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-semibold bg-[var(--color-status-resolved-bg-light)] text-[var(--color-status-resolved-text-light)] dark:bg-[var(--color-status-resolved-bg-dark)] dark:text-[var(--color-status-resolved-text-dark)]">
                 <span class="w-2 h-2 rounded-full bg-[var(--color-status-resolved-dot)]"></span>
-                Resolved
-            </span>
-        </div>
-
-        <!-- High Priority Unassigned -->
-        <div class="bg-white dark:bg-slate-900 rounded-lg p-3.5 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <div>
-                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">High Priority Unassigned</span>
-                <div class="mt-1 flex items-baseline gap-2">
-                    <span class="text-2xl font-extrabold text-rose-600 dark:text-rose-400 tabular-nums-metric">{{ $highPriorityUnassigned }}</span>
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ $urgentReports }} total critical/high</span>
-                </div>
-            </div>
-            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-semibold bg-[var(--color-status-hazard-bg-light)] text-[var(--color-status-hazard-text-light)] dark:bg-[var(--color-status-hazard-bg-dark)] dark:text-[var(--color-status-hazard-text-dark)]">
-                <span class="w-2 h-2 rounded-full bg-[var(--color-status-hazard-dot)]"></span>
-                Critical Hazard
+                MTTR
             </span>
         </div>
     </div>
@@ -182,7 +197,7 @@
                                     </span>
                                 </td>
                                 <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 truncate max-w-[120px]">
-                                    {{ $rep->assignedStaff ? $rep->assignedStaff->name : ($rep->department ? $rep->department->code : 'Unassigned') }}
+                                    {{ $rep->personnel ? $rep->personnel->name : ($rep->department ? $rep->department->code : 'Unassigned') }}
                                 </td>
                                 <td class="py-2.5 px-3 text-right text-slate-500 dark:text-slate-400 whitespace-nowrap text-[11px] tabular-nums-metric">
                                     {{ $rep->created_at->format('M d') }}
@@ -192,6 +207,69 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Municipal Action Units Workload: Compact Table -->
+    <div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div class="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <h2 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Open Reports Per Municipal Unit ({{ $openReportsPerUnit->count() }})</h2>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Current workload distribution across Santa Cruz municipal response units and action teams.</p>
+            </div>
+            <a href="{{ route('admin.staff') }}" class="text-xs text-teal-700 dark:text-teal-400 hover:underline font-semibold">Manage Units & Personnel →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold text-[11px]">
+                    <tr>
+                        <th class="py-2.5 px-3">Unit Code</th>
+                        <th class="py-2.5 px-3">Department / Action Unit</th>
+                        <th class="py-2.5 px-3">Active Personnel</th>
+                        <th class="py-2.5 px-3">Open Reports</th>
+                        <th class="py-2.5 px-3">Urgent / High Priority</th>
+                        <th class="py-2.5 px-3 text-right">Queue Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @forelse($openReportsPerUnit as $unit)
+                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                            <td class="py-2.5 px-3">
+                                <span class="px-1.5 py-0.5 rounded font-mono font-bold text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                    {{ $unit->code }}
+                                </span>
+                            </td>
+                            <td class="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100">
+                                {{ $unit->name }}
+                            </td>
+                            <td class="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                                {{ $unit->active_personnel_count }} personnel
+                            </td>
+                            <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100">
+                                {{ $unit->open_reports_count }}
+                            </td>
+                            <td class="py-2.5 px-3">
+                                @if($unit->urgent_reports_count > 0)
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                                        {{ $unit->urgent_reports_count }} critical/high
+                                    </span>
+                                @else
+                                    <span class="text-slate-400 text-[11px]">0 urgent</span>
+                                @endif
+                            </td>
+                            <td class="py-2.5 px-3 text-right">
+                                <a href="{{ route('admin.reports', ['unit' => $unit->id]) }}" class="px-2.5 py-1 rounded border border-teal-200 dark:border-teal-900 text-teal-800 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 font-semibold text-[11px] transition">
+                                    Filter Unit Queue →
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="py-6 text-center text-slate-400 text-xs">No active municipal units found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -223,6 +301,5 @@
     <x-admin.triage-drawer
         :selected-report="$selectedReport"
         :departments="$departments"
-        :staff-members="$staffMembers"
     />
 </div>

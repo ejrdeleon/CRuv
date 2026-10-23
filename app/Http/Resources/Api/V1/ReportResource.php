@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Models\Department;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -37,6 +38,7 @@ class ReportResource extends JsonResource
             'can_edit' => $this->canBeEditedBy($request->user()),
             'category' => new CategoryResource($this->whenLoaded('category')),
             'department_name' => $this->whenLoaded('department', fn () => $this->department?->name),
+            'assigned_unit_name' => $this->relationLoaded('department') ? $this->department?->name : ($this->department_id ? Department::find($this->department_id)?->name : null),
             'assigned_staff_name' => $this->whenLoaded('assignedStaff', fn () => $this->assignedStaff?->name),
             'assigned_to_name' => $this->whenLoaded('assignedStaff', fn () => $this->assignedStaff?->name),
             'images' => ReportImageResource::collection($this->whenLoaded('images')),

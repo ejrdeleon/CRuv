@@ -32,6 +32,11 @@ class Department extends Model
         return $this->hasMany(User::class, 'department_id');
     }
 
+    public function personnel(): HasMany
+    {
+        return $this->hasMany(Personnel::class, 'department_id');
+    }
+
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class, 'department_id');

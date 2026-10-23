@@ -35,8 +35,8 @@
 
     <!-- Filters Bar (Shared Data Source for Table + Map) -->
     <div class="bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-slate-800 space-y-2.5">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 text-xs">
-            <div class="lg:col-span-2 relative">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+            <div class="sm:col-span-2 relative">
                 <svg class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search reference #, title, barangay, resident name..."
                     class="w-full pl-8 pr-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:border-teal-600 focus:outline-none">
@@ -74,9 +74,35 @@
                     @endforeach
                 </select>
             </div>
+
+            <div>
+                <select wire:model.live="departmentFilter" class="w-full py-1.5 px-2.5 rounded-md border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-teal-600 focus:outline-none">
+                    <option value="">All Municipal Units</option>
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->id }}">{{ $dept->code }} — {{ $dept->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <select wire:model.live="personnelFilter" class="w-full py-1.5 px-2.5 rounded-md border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-teal-600 focus:outline-none">
+                    <option value="">All Personnel</option>
+                    @foreach($personnelList as $person)
+                        <option value="{{ $person->id }}">{{ $person->name }} ({{ $person->position }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <select wire:model.live="assignmentFilter" class="w-full py-1.5 px-2.5 rounded-md border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-teal-600 focus:outline-none">
+                    <option value="">All Assignment States</option>
+                    <option value="unassigned">⚠️ Unassigned Only</option>
+                    <option value="assigned">✓ Assigned (Any Unit)</option>
+                </select>
+            </div>
         </div>
 
-        @if($search || $statusFilter || $priorityFilter || $categoryFilter || $departmentFilter)
+        @if($search || $statusFilter || $priorityFilter || $categoryFilter || $departmentFilter || $personnelFilter || $assignmentFilter)
             <div class="flex items-center justify-between text-xs pt-1.5 border-t border-slate-100 dark:border-slate-800">
                 <span class="text-slate-500 dark:text-slate-400 text-[11px]">
                     Filters active • Showing {{ $reports->total() }} matching {{ \Illuminate\Support\Str::plural('case', $reports->total()) }} ({{ count($mapReports) }} with GPS coordinates)
@@ -202,11 +228,16 @@
                                                 {{ $report->status_label }}
                                             </span>
                                         </td>
-                                        <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 max-w-[140px] truncate">
-                                            @if($report->assignedStaff)
-                                                <span class="font-medium text-slate-900 dark:text-white block truncate">{{ $report->assignedStaff->name }}</span>
+                                        <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 max-w-[150px] truncate">
+                                            @if($report->personnel)
+                                                <span class="font-medium text-slate-900 dark:text-white block truncate">{{ $report->personnel->name }}</span>
+                                                <span class="text-[11px] text-teal-700 dark:text-teal-400 font-semibold block truncate">{{ $report->department?->code ?? $report->personnel->department?->code }}</span>
+                                            @elseif($report->department)
+                                                <span class="font-medium text-slate-900 dark:text-white block truncate">{{ $report->department->code }}</span>
+                                                <span class="text-[11px] text-slate-400 block truncate">{{ $report->department->name }}</span>
+                                            @else
+                                                <span class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold block italic">Unassigned</span>
                                             @endif
-                                            <span class="text-[11px] text-slate-400 block truncate">{{ $report->department?->name ?? 'Unassigned' }}</span>
                                         </td>
                                         <td class="py-2.5 px-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-[11px] tabular-nums-metric">
                                             {{ $report->created_at->format('M d, Y') }}
@@ -234,6 +265,5 @@
     <x-admin.triage-drawer
         :selected-report="$selectedReport"
         :departments="$departments"
-        :staff-members="$staffMembers"
     />
 </div>

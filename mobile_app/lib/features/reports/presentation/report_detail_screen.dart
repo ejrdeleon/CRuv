@@ -171,21 +171,22 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                           .textTheme
                                           .bodyLarge,
                                     ),
-                                    if (report.assignedToName != null) ...[
+                                    if (report.assignedUnitName != null &&
+                                        report.assignedUnitName!.isNotEmpty) ...[
                                       const SizedBox(
                                         height: AppTheme.spacingMd,
                                       ),
                                       Row(
                                         children: [
                                           Icon(
-                                            Icons.badge_outlined,
+                                            Icons.account_balance_outlined,
                                             size: 18,
                                             color: Theme.of(context).colorScheme.primary,
                                           ),
                                           const SizedBox(width: 6),
                                           Expanded(
                                             child: Text(
-                                              'Assigned Personnel: ${report.assignedToName}',
+                                              'Assigned Unit: ${report.assignedUnitName}',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.w600,
                                                 fontSize: 13,

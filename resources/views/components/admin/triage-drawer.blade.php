@@ -84,21 +84,27 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Unit / Department</label>
-                        <select wire:model="drawerDepartmentId" class="w-full py-1.5 px-2.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs">
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Municipal Unit</label>
+                        <select wire:model.live="drawerDepartmentId" class="w-full py-1.5 px-2.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs">
                             <option value="">Unassigned</option>
                             @foreach($departments as $dept)
-                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                <option value="{{ $dept->id }}">{{ $dept->code }} — {{ $dept->name }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     <div>
-                        <label for="drawer-assign-select" class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Personnel (Press A)</label>
-                        <select id="drawer-assign-select" wire:model="drawerStaffId" class="w-full py-1.5 px-2.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs">
-                            <option value="">Select Personnel</option>
-                            @foreach($staffMembers as $staff)
-                                <option value="{{ $staff->id }}">{{ $staff->name }}</option>
+                        <label for="drawer-assign-select" class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Unit Personnel (Optional)</label>
+                        @php
+                            $targetDeptId = $this->drawerDepartmentId ?? null;
+                            $activePersonnel = $targetDeptId
+                                ? \App\Models\Personnel::where('department_id', $targetDeptId)->where('is_active', true)->orderBy('name')->get()
+                                : collect();
+                        @endphp
+                        <select id="drawer-assign-select" wire:model="drawerPersonnelId" class="w-full py-1.5 px-2.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs" {{ ! $targetDeptId ? 'disabled' : '' }}>
+                            <option value="">{{ $targetDeptId ? 'All Unit Staff (No specific personnel)' : 'Select Unit First' }}</option>
+                            @foreach($activePersonnel as $person)
+                                <option value="{{ $person->id }}">{{ $person->name }} ({{ $person->position }})</option>
                             @endforeach
                         </select>
                     </div>

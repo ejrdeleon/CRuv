@@ -225,19 +225,27 @@
             <!-- Current Assignment Card -->
             <div class="bg-white dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Unit Assignment</h2>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Unit & Personnel Assignment</h2>
                     <button type="button" wire:click="openAssignModal" class="text-xs font-semibold text-teal-700 dark:text-teal-400 hover:underline">Change</button>
                 </div>
                 <div class="space-y-1.5 text-xs">
                     <div class="p-2 bg-slate-50 dark:bg-slate-950 rounded border border-slate-200 dark:border-slate-800">
-                        <span class="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block">Department</span>
-                        <p class="font-bold text-slate-800 dark:text-slate-200">{{ $report->department?->name ?? 'Unassigned' }}</p>
+                        <span class="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block">Responsible Municipal Unit</span>
+                        @if($report->department)
+                            <p class="font-bold text-slate-800 dark:text-slate-200">{{ $report->department->name }}</p>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 inline-block mt-0.5">{{ $report->department->code }}</span>
+                        @else
+                            <p class="text-amber-600 dark:text-amber-400 font-semibold italic">Unassigned Unit</p>
+                        @endif
                     </div>
                     <div class="p-2 bg-slate-50 dark:bg-slate-950 rounded border border-slate-200 dark:border-slate-800">
-                        <span class="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block">Assigned Officer / Lead</span>
-                        <p class="font-bold text-slate-800 dark:text-slate-200">{{ $report->assignedStaff?->name ?? 'Unassigned Officer' }}</p>
-                        @if($report->assignedStaff?->phone)
-                            <p class="text-[11px] text-teal-700 dark:text-teal-400 font-semibold">{{ $report->assignedStaff->phone }}</p>
+                        <span class="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block">Designated Unit Personnel</span>
+                        @if($report->personnel)
+                            <p class="font-bold text-slate-800 dark:text-slate-200">{{ $report->personnel->name }}</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ $report->personnel->position }}</p>
+                            <p class="text-[11px] text-teal-700 dark:text-teal-400 font-mono">{{ $report->personnel->contact_number }}</p>
+                        @else
+                            <p class="text-slate-400 dark:text-slate-500 italic">No specific personnel assigned (Unit-wide)</p>
                         @endif
                     </div>
                 </div>
@@ -359,23 +367,25 @@
 
                 <div class="space-y-3 text-xs">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Responsible Department</label>
-                        <select wire:model="assignedDepartmentId" class="w-full p-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
-                            <option value="">Select Department...</option>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Responsible Municipal Unit *</label>
+                        <select wire:model.live="assignedDepartmentId" class="w-full p-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
+                            <option value="">Select Municipal Action Unit...</option>
                             @foreach($departments as $dept)
-                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                <option value="{{ $dept->id }}">{{ $dept->code }} — {{ $dept->name }}</option>
                             @endforeach
                         </select>
+                        @error('assignedDepartmentId') <span class="text-rose-600 text-[11px]">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Assign Officer / Lead</label>
-                        <select wire:model="assignedStaffId" class="w-full p-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
-                            <option value="">Select Officer...</option>
-                            @foreach($staffMembers as $staff)
-                                <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $staff->department?->code ?? 'Admin' }})</option>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Designated Unit Personnel (Optional)</label>
+                        <select wire:model="assignedPersonnelId" class="w-full p-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white" {{ ! $assignedDepartmentId ? 'disabled' : '' }}>
+                            <option value="">{{ $assignedDepartmentId ? 'All Unit Staff (No specific personnel)' : 'Select Unit First' }}</option>
+                            @foreach($personnel as $person)
+                                <option value="{{ $person->id }}">{{ $person->name }} ({{ $person->position }})</option>
                             @endforeach
                         </select>
+                        @error('assignedPersonnelId') <span class="text-rose-600 text-[11px]">{{ $message }}</span> @enderror
                     </div>
 
                     <div>

@@ -5,11 +5,11 @@ namespace App\Livewire\Admin;
 use App\Models\ActivityLog;
 use App\Models\Department;
 use App\Models\Notification;
+use App\Models\Personnel;
 use App\Models\Report;
 use App\Models\ReportAssignment;
 use App\Models\ReportComment;
 use App\Models\ReportStatusHistory;
-use App\Models\User;
 use App\Services\ReportPhotoUploader;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -40,7 +40,7 @@ class ReportDetail extends Component
     // Assignment properties
     public ?int $assignedDepartmentId = null;
 
-    public ?int $assignedStaffId = null;
+    public ?int $assignedPersonnelId = null;
 
     public string $assignmentNotes = '';
 
@@ -64,8 +64,8 @@ class ReportDetail extends Component
 
         $this->newStatus = $report->status;
         $this->selectedPriority = $report->priority;
-        $this->assignedDepartmentId = $report->department_id;
-        $this->assignedStaffId = $report->assigned_to;
+        $this->assignedDepartmentId = $report->department_id ?: $report->category?->department_id;
+        $this->assignedPersonnelId = $report->personnel_id;
         $this->resolutionNotes = $report->resolution_notes ?? '';
     }
 
@@ -74,6 +74,7 @@ class ReportDetail extends Component
         $this->report->load([
             'category:id,name,slug,description,is_hazardous,safety_advisory,color',
             'department:id,name,code',
+            'personnel:id,name,position,contact_number,email,department_id',
             'assignedStaff:id,name,email',
             'duplicateOf:id,reference_number,title',
             'duplicates:id,reference_number,title,duplicate_of_id',
@@ -216,33 +217,56 @@ class ReportDetail extends Component
 
     public function openAssignModal()
     {
-        $this->assignedDepartmentId = $this->report->department_id;
-        $this->assignedStaffId = $this->report->assigned_to;
+        $this->assignedDepartmentId = $this->report->department_id ?: $this->report->category?->department_id;
+        $this->assignedPersonnelId = $this->report->personnel_id;
         $this->assignmentNotes = '';
         $this->showAssignModal = true;
+    }
+
+    public function updatedAssignedDepartmentId(): void
+    {
+        if ($this->assignedPersonnelId) {
+            $valid = Personnel::where('id', $this->assignedPersonnelId)
+                ->where('department_id', $this->assignedDepartmentId)
+                ->where('is_active', true)
+                ->exists();
+
+            if (! $valid) {
+                $this->assignedPersonnelId = null;
+            }
+        }
     }
 
     public function assignReport()
     {
         $this->validate([
-            'assignedDepartmentId' => 'nullable|exists:departments,id',
-            'assignedStaffId' => 'nullable|exists:users,id',
+            'assignedDepartmentId' => 'required|exists:departments,id',
+            'assignedPersonnelId' => 'nullable|exists:personnel,id',
             'assignmentNotes' => 'nullable|string|max:1000',
         ]);
 
+        $dept = Department::findOrFail($this->assignedDepartmentId);
+        $person = $this->assignedPersonnelId ? Personnel::find($this->assignedPersonnelId) : null;
+        $assigneeText = $dept->name;
+        if ($person) {
+            $assigneeText .= ", {$person->name}";
+        }
+
+        $newStatus = in_array($this->report->status, ['submitted', 'under_review', 'verified'], true) ? 'assigned' : $this->report->status;
+
         $this->report->update([
             'department_id' => $this->assignedDepartmentId,
-            'assigned_to' => $this->assignedStaffId,
+            'personnel_id' => $this->assignedPersonnelId,
             'assigned_at' => now(),
-            'status' => $this->report->status === 'submitted' || $this->report->status === 'under_review' || $this->report->status === 'verified' ? 'assigned' : $this->report->status,
+            'status' => $newStatus,
         ]);
 
         ReportAssignment::create([
             'report_id' => $this->report->id,
             'department_id' => $this->assignedDepartmentId,
+            'personnel_id' => $this->assignedPersonnelId,
             'assigned_by_user_id' => Auth::id(),
-            'assigned_to_user_id' => $this->assignedStaffId,
-            'assignment_notes' => $this->assignmentNotes,
+            'assignment_notes' => $this->assignmentNotes ?: "Assigned to {$assigneeText}",
             'assigned_at' => now(),
         ]);
 
@@ -250,35 +274,23 @@ class ReportDetail extends Component
             'report_id' => $this->report->id,
             'user_id' => Auth::id(),
             'from_status' => $this->report->status,
-            'to_status' => 'assigned',
-            'comment' => 'Assigned to '.($this->report->assignedStaff ? $this->report->assignedStaff->name : 'Department').($this->assignmentNotes ? " - Notes: {$this->assignmentNotes}" : ''),
+            'to_status' => $newStatus,
+            'comment' => "Assigned to {$assigneeText}".($this->assignmentNotes ? " — Notes: {$this->assignmentNotes}" : ''),
         ]);
-
-        // Notify assigned staff member
-        if ($this->assignedStaffId) {
-            Notification::create([
-                'user_id' => $this->assignedStaffId,
-                'report_id' => $this->report->id,
-                'title' => 'New Incident Assignment',
-                'message' => "You have been assigned to Report #{$this->report->reference_number}: {$this->report->title}.",
-                'type' => 'assigned_to_staff',
-                'is_read' => false,
-            ]);
-        }
 
         // Notify resident
         Notification::create([
             'user_id' => $this->report->user_id,
             'report_id' => $this->report->id,
             'title' => 'Report Assigned to Response Team',
-            'message' => "Your report #{$this->report->reference_number} has been assigned to ".($this->report->department ? $this->report->department->name : 'the municipal response crew').'.',
+            'message' => "Your report #{$this->report->reference_number} has been assigned to {$dept->name}.",
             'type' => 'report_assigned',
             'is_read' => false,
         ]);
 
         ActivityLog::log(
             'report_assigned',
-            "Report #{$this->report->reference_number} assigned to ".($this->report->assignedStaff ? $this->report->assignedStaff->name : 'Dept'),
+            "Report #{$this->report->reference_number} assigned to {$assigneeText}",
             $this->report
         );
 
@@ -327,8 +339,10 @@ class ReportDetail extends Component
 
     public function render()
     {
-        $departments = Department::where('is_active', true)->get();
-        $staffMembers = User::whereIn('role', ['staff', 'admin'])->where('is_active', true)->get();
+        $departments = Department::where('is_active', true)->orderBy('name')->get();
+        $personnel = $this->assignedDepartmentId
+            ? Personnel::where('department_id', $this->assignedDepartmentId)->where('is_active', true)->orderBy('name')->get()
+            : collect();
         $otherReports = Report::where('id', '!=', $this->report->id)
             ->select(['id', 'reference_number', 'title'])
             ->orderByDesc('created_at')
@@ -337,7 +351,7 @@ class ReportDetail extends Component
 
         return view('livewire.admin.report-detail', [
             'departments' => $departments,
-            'staffMembers' => $staffMembers,
+            'personnel' => $personnel,
             'otherReports' => $otherReports,
         ]);
     }

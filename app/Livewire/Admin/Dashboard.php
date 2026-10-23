@@ -6,7 +6,6 @@ use App\Livewire\Concerns\InteractsWithTriageDrawer;
 use App\Models\Department;
 use App\Models\Report;
 use App\Models\ReportCategory;
-use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -19,7 +18,7 @@ class Dashboard extends Component
 
     public function render()
     {
-        // 1. Metric-driven Top Stat Aggregates cached for 60s (reduces 12 queries to 1-2 cached lookups)
+        // 1. Metric-driven Top Stat Aggregates cached for 60s
         $metrics = Cache::remember('admin:dashboard:metrics', 60, function () {
             $agg = DB::table('reports')->selectRaw("
                 COUNT(*) as total,
@@ -29,7 +28,8 @@ class Dashboard extends Component
                 SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_count,
                 SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved_count,
                 SUM(CASE WHEN priority IN ('urgent', 'high') AND status NOT IN ('resolved', 'rejected', 'duplicate') THEN 1 ELSE 0 END) as urgent_count,
-                SUM(CASE WHEN priority IN ('urgent', 'high') AND assigned_to IS NULL AND status NOT IN ('resolved', 'rejected', 'duplicate') THEN 1 ELSE 0 END) as unassigned_high_prio
+                SUM(CASE WHEN department_id IS NULL AND status NOT IN ('resolved', 'rejected', 'duplicate') THEN 1 ELSE 0 END) as unassigned_count,
+                SUM(CASE WHEN priority IN ('urgent', 'high') AND department_id IS NULL AND status NOT IN ('resolved', 'rejected', 'duplicate') THEN 1 ELSE 0 END) as unassigned_high_prio
             ")->first();
 
             $statusCounts = Report::select('status', DB::raw('count(*) as count'))
@@ -45,6 +45,22 @@ class Dashboard extends Component
                 ->groupBy('priority')
                 ->pluck('count', 'priority')
                 ->toArray();
+
+            $openReportsPerUnit = Department::where('is_active', true)
+                ->withCount([
+                    'reports as open_reports_count' => function ($q) {
+                        $q->whereIn('status', ['submitted', 'under_review', 'verified', 'assigned', 'in_progress']);
+                    },
+                    'reports as urgent_reports_count' => function ($q) {
+                        $q->whereIn('status', ['submitted', 'under_review', 'verified', 'assigned', 'in_progress'])
+                            ->whereIn('priority', ['urgent', 'high']);
+                    },
+                    'personnel as active_personnel_count' => function ($q) {
+                        $q->where('is_active', true);
+                    },
+                ])
+                ->orderByDesc('open_reports_count')
+                ->get();
 
             $resolvedForAvg = DB::table('reports')
                 ->where('status', 'resolved')
@@ -65,22 +81,24 @@ class Dashboard extends Component
                 'inProgressReports' => (int) ($agg->in_progress_count ?? 0),
                 'resolvedReports' => (int) ($agg->resolved_count ?? 0),
                 'urgentReports' => (int) ($agg->urgent_count ?? 0),
+                'unassignedCount' => (int) ($agg->unassigned_count ?? 0),
                 'highPriorityUnassigned' => (int) ($agg->unassigned_high_prio ?? 0),
                 'avgHours' => $avgHours,
                 'statusCounts' => $statusCounts,
                 'categoryBreakdown' => $categoryBreakdown,
                 'priorityCounts' => $priorityCounts,
+                'openReportsPerUnit' => $openReportsPerUnit,
             ];
         });
 
         // 2. Dense Table Rows with strictly selected columns
         $recentReports = Report::with([
-            'category:id,name',
+            'category:id,name,color',
             'user:id,name',
-            'assignedStaff:id,name',
-            'department:id,name',
+            'department:id,name,code',
+            'personnel:id,name,position',
         ])
-            ->select(['id', 'reference_number', 'user_id', 'category_id', 'department_id', 'assigned_to', 'title', 'priority', 'status', 'address_text', 'created_at'])
+            ->select(['id', 'reference_number', 'user_id', 'category_id', 'department_id', 'personnel_id', 'assigned_to', 'title', 'priority', 'status', 'address_text', 'created_at'])
             ->orderByDesc('created_at')
             ->take(15)
             ->get();
@@ -90,23 +108,23 @@ class Dashboard extends Component
             Report::with('category:id,name,is_hazardous')
                 ->whereNotNull('latitude')
                 ->whereNotNull('longitude')
-                ->select(['id', 'reference_number', 'title', 'category_id', 'status', 'priority', 'latitude', 'longitude', 'address_text'])
+                ->select(['id', 'reference_number', 'title', 'category_id', 'department_id', 'personnel_id', 'status', 'priority', 'latitude', 'longitude', 'address_text'])
                 ->orderByDesc('created_at')
                 ->take(40)
                 ->get()
         );
 
         $selectedReport = $this->selectedReportId
-            ? Report::with(['category', 'user', 'assignedStaff', 'department', 'images', 'statusHistories.user'])
+            ? Report::with(['category', 'user', 'personnel.department', 'department', 'images', 'statusHistories.user'])
                 ->find($this->selectedReportId)
             : null;
 
-        $departments = Department::where('is_active', true)->get();
-        $staffMembers = User::whereIn('role', ['admin', 'staff'])->where('is_active', true)->get();
+        $departments = Department::where('is_active', true)->orderBy('name')->get();
 
         return view('livewire.admin.dashboard', [
             'totalActiveTickets' => $metrics['totalActiveTickets'],
             'avgResolutionHours' => $metrics['avgHours'],
+            'unassignedCount' => $metrics['unassignedCount'],
             'highPriorityUnassigned' => $metrics['highPriorityUnassigned'],
             'totalReports' => $metrics['totalReports'],
             'newReports' => $metrics['newReports'],
@@ -117,11 +135,11 @@ class Dashboard extends Component
             'statusCounts' => $metrics['statusCounts'],
             'categoryBreakdown' => $metrics['categoryBreakdown'],
             'priorityCounts' => $metrics['priorityCounts'],
+            'openReportsPerUnit' => $metrics['openReportsPerUnit'],
             'recentReports' => $recentReports,
             'mapReports' => $mapReports,
             'selectedReport' => $selectedReport,
             'departments' => $departments,
-            'staffMembers' => $staffMembers,
         ]);
     }
 }
