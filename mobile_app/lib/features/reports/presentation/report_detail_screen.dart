@@ -460,9 +460,23 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                             children: [
                                               TileLayer(
                                                 urlTemplate:
-                                                    Theme.of(context).brightness == Brightness.dark ? 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                                 userAgentPackageName:
                                                     'ph.gov.barangay.community_report_app',
+                                                tileBuilder:
+                                                    (context, tileWidget, tile) {
+                                                  return Container(
+                                                    color: const Color(0xFFE2E8F0),
+                                                    child: tileWidget,
+                                                  );
+                                                },
+                                              ),
+                                              const RichAttributionWidget(
+                                                attributions: [
+                                                  TextSourceAttribution(
+                                                    'OpenStreetMap contributors',
+                                                  ),
+                                                ],
                                               ),
                                               MarkerLayer(
                                                 markers: [
