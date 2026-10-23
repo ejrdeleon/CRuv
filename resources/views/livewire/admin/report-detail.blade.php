@@ -279,7 +279,7 @@
     <!-- Status Change Modal -->
     @if($showStatusModal)
         <div class="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-lg w-full p-5 shadow-xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-lg w-full p-5 shadow-md border border-slate-200 dark:border-slate-800 space-y-3.5">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white">Update Incident Status</h3>
                     <button type="button" wire:click="$set('showStatusModal', false)" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-lg leading-none">×</button>
@@ -359,7 +359,7 @@
     <!-- Assign Modal -->
     @if($showAssignModal)
         <div class="fixed inset-0 z-50 bg-slate-950/70 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full p-5 shadow-xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full p-5 shadow-md border border-slate-200 dark:border-slate-800 space-y-3.5">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white">Assign Incident Case</h3>
                     <button type="button" wire:click="$set('showAssignModal', false)" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-lg leading-none">×</button>

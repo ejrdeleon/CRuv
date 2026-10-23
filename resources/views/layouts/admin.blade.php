@@ -282,7 +282,7 @@
         x-show="isOpen"
         x-cloak
         style="display: none;"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/92 backdrop-blur-xs select-none"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 select-none"
         role="dialog"
         aria-modal="true"
         aria-label="Photo evidence lightbox"

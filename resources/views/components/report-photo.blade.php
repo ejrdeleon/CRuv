@@ -48,7 +48,7 @@
     @endif
 
     @if(!empty($captionText) && ($size === 'detail' || $size === 'drawer'))
-        <div class="absolute bottom-0 inset-x-0 p-1.5 bg-slate-950/80 backdrop-blur-xs text-[10px] text-slate-200 truncate font-medium">
+        <div class="absolute bottom-0 inset-x-0 p-1.5 bg-slate-950/85 text-[10px] text-slate-200 truncate font-medium">
             {{ $captionText }}
         </div>
     @endif

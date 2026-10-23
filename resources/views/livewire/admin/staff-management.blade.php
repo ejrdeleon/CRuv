@@ -420,7 +420,7 @@
     <!-- Unit (Department) Modal (Add / Edit) -->
     @if($showDeptModal)
         <div class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-lg w-full p-5 shadow-xl border border-slate-200 dark:border-slate-800 space-y-3.5 my-8">
+            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-lg w-full p-5 shadow-md border border-slate-200 dark:border-slate-800 space-y-3.5 my-8">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">
                         {{ $editingDeptId ? 'Edit Municipal Unit' : 'Add Municipal Action Unit' }}
@@ -484,7 +484,7 @@
     <!-- Personnel Modal (Add / Edit) -->
     @if($showPersonnelModal)
         <div class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-lg w-full p-5 shadow-xl border border-slate-200 dark:border-slate-800 space-y-3.5 my-8">
+            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-lg w-full p-5 shadow-md border border-slate-200 dark:border-slate-800 space-y-3.5 my-8">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">
                         {{ $editingPersonnelId ? 'Edit Personnel Record' : 'Add Unit Personnel Record' }}
@@ -551,7 +551,7 @@
     <!-- Category Modal (Add / Edit) -->
     @if($showCategoryModal)
         <div class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-lg w-full p-5 shadow-xl border border-slate-200 dark:border-slate-800 space-y-3.5 my-8">
+            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-lg w-full p-5 shadow-md border border-slate-200 dark:border-slate-800 space-y-3.5 my-8">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">
                         {{ $editingCategoryId ? 'Edit Report Category' : 'Create New Category' }}
@@ -640,7 +640,7 @@
     <!-- Admin Account Modal -->
     @if($showNewAdminModal)
         <div class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full p-5 shadow-xl border border-slate-200 dark:border-slate-800 space-y-3.5 my-8">
+            <div class="bg-white dark:bg-slate-900 rounded-lg max-w-md w-full p-5 shadow-md border border-slate-200 dark:border-slate-800 space-y-3.5 my-8">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Create Administrator Login</h3>
                     <button type="button" wire:click="$set('showNewAdminModal', false)" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-lg leading-none">✕</button>

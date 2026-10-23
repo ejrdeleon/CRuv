@@ -96,8 +96,8 @@
             <div>
                 <select wire:model.live="assignmentFilter" class="w-full py-1.5 px-2.5 rounded-md border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-teal-600 focus:outline-none">
                     <option value="">All Assignment States</option>
-                    <option value="unassigned">⚠️ Unassigned Only</option>
-                    <option value="assigned">✓ Assigned (Any Unit)</option>
+                    <option value="unassigned">Unassigned Only</option>
+                    <option value="assigned">Assigned Cases Only</option>
                 </select>
             </div>
         </div>
